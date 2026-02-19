@@ -77,3 +77,8 @@ cd backend
 - 현재 자동화 테스트는 스프링 컨텍스트 로드 테스트 중심입니다.
 - 위 6장 항목을 기준으로 서비스 단위/통합/보안 테스트를 순차 확장합니다.
 
+
+## 8. DB Bootstrap (after git pull)
+```bash
+mysql -u root -p < backend/sql/account_book_ddl.sql
+```
