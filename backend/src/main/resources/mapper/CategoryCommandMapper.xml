@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mycompany._thstudy.category.command.application.mapper.CategoryDuplicateMapper">
+
+    <select id="existsByUserEmailAndNameAndType"
+            resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM categories c
+                 JOIN users u ON c.user_id = u.id
+        WHERE u.email = #{userEmail}
+          AND c.name  = #{name}
+          AND c.type  = #{type}
+    </select>
+
+    <!-- 카테고리 중복 여부 확인 (수정 시 - 자기 자신 제외) -->
+    <select id="existsByUserEmailAndNameAndTypeExcludeId"
+            resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM categories c
+                 JOIN users u ON c.user_id = u.id
+        WHERE u.email = #{userEmail}
+          AND c.name  = #{name}
+          AND c.type  = #{type}
+          AND c.id   != #{categoryId}
+    </select>
+
+</mapper>

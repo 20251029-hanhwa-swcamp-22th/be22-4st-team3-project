@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mycompany._thstudy.account.query.mapper.AccountMapper">
+
+    <select id="findAllByUserEmail"
+            resultType="com.mycompany._thstudy.account.query.dto.response.AccountResponse">
+        SELECT
+            a.id,
+            a.name,
+            a.balance
+        FROM accounts a
+                 JOIN users u ON a.user_id = u.id
+        WHERE u.email = #{userEmail}
+        ORDER BY a.created_at ASC
+    </select>
+
+    <select id="findByIdAndUserEmail"
+            resultType="com.mycompany._thstudy.account.query.dto.response.AccountResponse">
+        SELECT
+            a.id,
+            a.name,
+            a.balance
+        FROM accounts a
+                 JOIN users u ON a.user_id = u.id
+        WHERE a.id = #{id}
+          AND u.email = #{userEmail}
+    </select>
+
+</mapper>
