@@ -163,7 +163,9 @@ async function fetchSummary() {
           <label>유형</label>
           <select v-model="filter.type" @change="onFilterTypeChange">
             <option value="">전체</option>
+            <option disabled>──────────</option>
             <option value="INCOME">수입</option>
+            <option disabled>──────────</option>
             <option value="EXPENSE">지출</option>
           </select>
         </div>
@@ -173,6 +175,7 @@ async function fetchSummary() {
           <label>카테고리</label>
           <select v-model="filter.categoryId">
             <option value="">전체</option>
+            <option disabled>──────────</option>
             <option v-for="cat in filterCategories" :key="cat.id" :value="cat.id">
               {{ cat.name }}
             </option>
