@@ -8,14 +8,13 @@
         v-for="account in accountStore.accounts"
         :key="account.id"
         class="account-card"
-        :class="{ active: selectedId === account.id }"
+        :class="{ active: expandedIds.has(account.id) }"
         @click="select(account)"
       >
         <div class="account-header">
           <span class="account-name">{{ account.name }}</span>
-          <button class="btn-icon" @click.stop="confirmDelete(account)">−</button>
         </div>
-        <div v-if="selectedId === account.id" class="account-balance">
+        <div v-if="expandedIds.has(account.id)" class="account-balance">
           잔액 : {{ formatAmount(account.balance) }}
         </div>
       </div>
@@ -83,6 +82,7 @@ import { useAccountStore } from '../../stores/account.js'
 import AccountAnalysisModal from './AccountAnalysisModal.vue'
 
 const accountStore = useAccountStore()
+const expandedIds = ref(new Set())
 const selectedId = ref(null)
 const showAdd = ref(false)
 const showEdit = ref(false)
@@ -113,13 +113,20 @@ async function loadAccounts() {
 
 async function select(account) {
   error.value = ''
-  selectedId.value = selectedId.value === account.id ? null : account.id
-  if (!selectedId.value) return
-  try {
-    await accountStore.fetchAccount(selectedId.value)
-  } catch (e) {
-    error.value = e.response?.data?.message || '계좌 정보를 불러오지 못했습니다.'
+  const ids = new Set(expandedIds.value)
+  if (ids.has(account.id)) {
+    ids.delete(account.id)
+    if (selectedId.value === account.id) selectedId.value = null
+  } else {
+    ids.add(account.id)
+    selectedId.value = account.id
+    try {
+      await accountStore.fetchAccount(account.id)
+    } catch (e) {
+      error.value = e.response?.data?.message || '계좌 정보를 불러오지 못했습니다.'
+    }
   }
+  expandedIds.value = ids
 }
 
 function formatAmount(v) {
@@ -150,6 +157,9 @@ async function confirmDelete(account) {
   try {
     await accountStore.removeAccount(account.id)
     if (selectedId.value === account.id) selectedId.value = null
+    const ids = new Set(expandedIds.value)
+    ids.delete(account.id)
+    expandedIds.value = ids
   } catch (e) {
     error.value = e.response?.data?.message || '계좌 삭제에 실패했습니다.'
   }
@@ -220,11 +230,19 @@ async function updateSelectedAccount() {
   border-radius: 12px;
   padding: 12px 16px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
   color: #fff;
+}
+.account-card:hover {
+  background: #42a5f5;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(33, 150, 243, 0.3);
 }
 .account-card.active {
   background: #2196f3;
+}
+.account-card.active:hover {
+  background: #1e88e5;
 }
 .account-header {
   display: flex;
@@ -286,18 +304,38 @@ async function updateSelectedAccount() {
 .btn-analysis {
   background: #5bb8f5;
   color: #fff;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-analysis:not(:disabled):hover {
+  background: #42a5f5;
+  transform: translateY(-1px);
 }
 .btn-danger {
   background: #e53935;
   color: #fff;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-danger:not(:disabled):hover {
+  background: #c62828;
+  transform: translateY(-1px);
 }
 .btn-primary {
   background: #5bb8f5;
   color: #fff;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-primary:not(:disabled):hover {
+  background: #42a5f5;
+  transform: translateY(-1px);
 }
 .btn-secondary {
   background: #eee;
   color: #333;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-secondary:not(:disabled):hover {
+  background: #e0e0e0;
+  transform: translateY(-1px);
 }
 .modal-overlay {
   position: fixed;

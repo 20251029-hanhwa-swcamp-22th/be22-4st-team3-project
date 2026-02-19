@@ -14,4 +14,6 @@ logs/
 # Windows reserved filename occasionally created by mistake
 nul
 
+# personal files
 CLAUDE.md
+REFACTOR.md
