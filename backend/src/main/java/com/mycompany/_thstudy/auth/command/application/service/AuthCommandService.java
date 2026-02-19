@@ -57,16 +57,16 @@ public class AuthCommandService {
 
       // 기본 카테고리추가
       List<Category> defaultCategories = List.of(
-          Category.builder().user(savedUser).name("[지출]-식비").type(CategoryType.EXPENSE).build(),
-          Category.builder().user(savedUser).name("[지출]-교통").type(CategoryType.EXPENSE).build(),
-          Category.builder().user(savedUser).name("[지출]-쇼핑").type(CategoryType.EXPENSE).build(),
-          Category.builder().user(savedUser).name("[지출]-기타").type(CategoryType.EXPENSE).build(),
+          Category.builder().user(savedUser).name("식비 (Food) ").type(CategoryType.EXPENSE).build(),
+          Category.builder().user(savedUser).name("교통비 (Traffic) ").type(CategoryType.EXPENSE).build(),
+          Category.builder().user(savedUser).name("쇼핑 (Shopping) ").type(CategoryType.EXPENSE).build(),
+          Category.builder().user(savedUser).name("기타 (Etc) ").type(CategoryType.EXPENSE).build(),
 
-          Category.builder().user(savedUser).name("[수입]-급여").type(CategoryType.INCOME).build(),
-          Category.builder().user(savedUser).name("[수입]-보너스").type(CategoryType.INCOME).build(),
-          Category.builder().user(savedUser).name("[수입]-기타").type(CategoryType.INCOME).build()
+          Category.builder().user(savedUser).name("급여 (Salary)").type(CategoryType.INCOME).build(),
+          Category.builder().user(savedUser).name("보너스 (Bonus)").type(CategoryType.INCOME).build(),
+          Category.builder().user(savedUser).name("기타 (Etc) ").type(CategoryType.INCOME).build()
       );
-      defaultCategories.forEach(categoryRepository::save);
+      defaultCategories.forEach(categoryRepository::save); // 향상된포문으로 하나씩꺼네서 저장
 
 
       // 4. savedUser의 id, email, nickname으로 SignupResponse 반환
