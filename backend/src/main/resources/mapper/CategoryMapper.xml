@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mycompany._thstudy.category.query.mapper.CategoryMapper">
+
+    <select id="findByUserEmail"
+            resultType="com.mycompany._thstudy.category.query.dto.response.CategoryResponse">
+        /* CategoryMapper.findByUserEmail */
+        SELECT
+            c.id,
+            c.name,
+            c.type
+        FROM categories c
+        JOIN users u ON c.user_id = u.id
+        WHERE u.email = #{userEmail}
+        ORDER BY c.type ASC, c.name ASC
+    </select>
+
+</mapper>
