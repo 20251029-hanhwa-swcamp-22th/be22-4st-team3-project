@@ -1,0 +1,28 @@
+# Build outputs
+.gradle/
+build/
+out/
+bin/
+
+# Keep Gradle wrapper jar tracked
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE / Editor
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local environment
+.env
+.env.*
+!.env.example

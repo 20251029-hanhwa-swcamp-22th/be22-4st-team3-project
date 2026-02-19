@@ -1,0 +1,15 @@
+# Workspace-level IDE files
+.idea/
+.vscode/
+.claude/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Windows reserved filename occasionally created by mistake
+nul
