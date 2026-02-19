@@ -6,7 +6,7 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:mariadb://localhost:3306/account_book?useUnicode=true&characterEncoding=UTF-8}
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:}
+    password: ${DB_PASSWORD:mariadb}
     driver-class-name: org.mariadb.jdbc.Driver
 
 jwt:

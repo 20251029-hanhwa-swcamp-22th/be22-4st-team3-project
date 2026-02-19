@@ -19,6 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 
+import com.mycompany._thstudy.category.command.domain.aggregate.Category;
+import com.mycompany._thstudy.category.command.domain.aggregate.CategoryType;
+import com.mycompany._thstudy.category.command.domain.repository.CategoryRepository;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -28,6 +33,7 @@ public class AuthCommandService {
   private final RefreshTokenRepository refreshTokenRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenProvider jwtTokenProvider;
+  private final CategoryRepository categoryRepository; // 기본카테고리용 변수고정값
 
   @Transactional
   public SignupResponse signup(SignupRequest request) {
@@ -49,7 +55,21 @@ public class AuthCommandService {
     //    hint: User savedUser = userRepository.save(user)
     User savedUser = userRepository.save(user);
 
-    // 4. savedUser의 id, email, nickname으로 SignupResponse 반환
+      // 기본 카테고리추가
+      List<Category> defaultCategories = List.of(
+          Category.builder().user(savedUser).name("[지출]-식비").type(CategoryType.EXPENSE).build(),
+          Category.builder().user(savedUser).name("[지출]-교통").type(CategoryType.EXPENSE).build(),
+          Category.builder().user(savedUser).name("[지출]-쇼핑").type(CategoryType.EXPENSE).build(),
+          Category.builder().user(savedUser).name("[지출]-기타").type(CategoryType.EXPENSE).build(),
+
+          Category.builder().user(savedUser).name("[수입]-급여").type(CategoryType.INCOME).build(),
+          Category.builder().user(savedUser).name("[수입]-보너스").type(CategoryType.INCOME).build(),
+          Category.builder().user(savedUser).name("[수입]-기타").type(CategoryType.INCOME).build()
+      );
+      defaultCategories.forEach(categoryRepository::save);
+
+
+      // 4. savedUser의 id, email, nickname으로 SignupResponse 반환
     //    hint: return new SignupResponse(savedUser.getId(), savedUser.getEmail(), savedUser.getNickname())
     return new SignupResponse(savedUser.getId(), savedUser.getEmail(), savedUser.getNickname());
   }
