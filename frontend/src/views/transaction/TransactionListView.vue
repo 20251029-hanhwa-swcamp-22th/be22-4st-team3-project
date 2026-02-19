@@ -12,6 +12,11 @@ const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
 const filter = ref({
   startDate: firstDay.toISOString().slice(0, 10),
   endDate: today.toISOString().slice(0, 10),
+  type: '',
+  categoryId: '',
+  keyword: '',
+  minAmount: '',
+  maxAmount: '',
 })
 
 const showForm = ref(false)
@@ -25,7 +30,39 @@ onMounted(async () => {
 })
 
 async function fetchList() {
-  await transactionStore.fetchTransactions(filter.value)
+  const params = { ...filter.value }
+  // 빈 값은 파라미터에서 제외
+  Object.keys(params).forEach((k) => {
+    if (params[k] === '' || params[k] === null || params[k] === undefined) {
+      delete params[k]
+    }
+  })
+  await transactionStore.fetchTransactions(params)
+}
+
+function resetFilter() {
+  filter.value = {
+    startDate: firstDay.toISOString().slice(0, 10),
+    endDate: today.toISOString().slice(0, 10),
+    type: '',
+    categoryId: '',
+    keyword: '',
+    minAmount: '',
+    maxAmount: '',
+  }
+  fetchList()
+}
+
+// 필터 유형에 맞는 카테고리 목록 (전체면 모두 표시)
+const filterCategories = computed(() =>
+  filter.value.type
+    ? categoryStore.categories.filter((c) => c.type === filter.value.type)
+    : categoryStore.categories
+)
+
+// 유형 변경 시 카테고리 초기화
+function onFilterTypeChange() {
+  filter.value.categoryId = ''
 }
 
 // 카테고리 필터링 (폼에서 type에 맞는 카테고리만 표시)
@@ -108,12 +145,68 @@ async function fetchSummary() {
       <button @click="openCreate" class="btn-primary">+ 거래 등록</button>
     </div>
 
-    <!-- 기간 필터 -->
-    <div class="filter-bar">
-      <input v-model="filter.startDate" type="date" />
-      <span>~</span>
-      <input v-model="filter.endDate" type="date" />
-      <button @click="fetchList" class="btn-search">조회</button>
+    <!-- 필터 영역 -->
+    <div class="filter-panel">
+      <div class="filter-row">
+        <!-- 기간 -->
+        <div class="filter-group filter-group--date">
+          <label>기간</label>
+          <div class="date-range">
+            <input v-model="filter.startDate" type="date" />
+            <span>~</span>
+            <input v-model="filter.endDate" type="date" />
+          </div>
+        </div>
+
+        <!-- 유형 -->
+        <div class="filter-group filter-group--sm">
+          <label>유형</label>
+          <select v-model="filter.type" @change="onFilterTypeChange">
+            <option value="">전체</option>
+            <option value="INCOME">수입</option>
+            <option value="EXPENSE">지출</option>
+          </select>
+        </div>
+
+        <!-- 카테고리 -->
+        <div class="filter-group filter-group--sm">
+          <label>카테고리</label>
+          <select v-model="filter.categoryId">
+            <option value="">전체</option>
+            <option v-for="cat in filterCategories" :key="cat.id" :value="cat.id">
+              {{ cat.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <!-- 키워드 -->
+        <div class="filter-group filter-group--wide">
+          <label>메모 검색</label>
+          <input
+            v-model="filter.keyword"
+            type="text"
+            placeholder="메모 키워드 입력"
+            @keyup.enter="fetchList"
+          />
+        </div>
+
+        <!-- 금액 범위 -->
+        <div class="filter-group">
+          <label>최소 금액</label>
+          <input v-model="filter.minAmount" type="number" min="0" placeholder="0" />
+        </div>
+        <div class="filter-group">
+          <label>최대 금액</label>
+          <input v-model="filter.maxAmount" type="number" min="0" placeholder="제한 없음" />
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button @click="resetFilter" class="btn-reset">초기화</button>
+        <button @click="fetchList" class="btn-search">조회</button>
+      </div>
     </div>
 
     <!-- 합계 -->
@@ -236,7 +329,8 @@ async function fetchSummary() {
 
     <!-- 거래 목록 -->
     <div class="tx-list">
-      <div v-if="transactionStore.transactions.length === 0" class="empty">
+      <div v-if="transactionStore.loading" class="empty">불러오는 중...</div>
+      <div v-else-if="transactionStore.transactions.length === 0" class="empty">
         거래 내역이 없습니다.
       </div>
       <div
@@ -265,7 +359,7 @@ async function fetchSummary() {
 
 <style scoped>
 .transaction-page {
-  max-width: 720px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 24px;
 }
@@ -280,30 +374,125 @@ async function fetchSummary() {
 h2 { color: #333; margin: 0; }
 h3 { color: #555; margin-bottom: 12px; }
 
-.filter-bar {
+/* --- 필터 패널 --- */
+.filter-panel {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  margin-bottom: 20px;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.filter-bar input[type="date"] {
-  padding: 8px;
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 130px;
+}
+
+.filter-group--date {
+  flex: 2;
+  min-width: 300px;
+}
+
+.filter-group--sm {
+  flex: 1;
+  min-width: 110px;
+  max-width: 160px;
+}
+
+.filter-group--wide {
+  flex: 2;
+  min-width: 200px;
+}
+
+.filter-group label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.filter-group input,
+.filter-group select {
+  padding: 7px 10px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 14px;
+  background: #fff;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+  outline: none;
+  border-color: #4a90d9;
+}
+
+.date-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.date-range input {
+  flex: 1;
+  min-width: 130px;
+}
+
+.date-range span {
+  color: #999;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btn-reset {
+  padding: 8px 16px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+}
+
+.btn-reset:hover {
+  background: #f5f5f5;
 }
 
 .btn-search {
-  padding: 8px 16px;
-  background: #555;
+  padding: 8px 20px;
+  background: #4a90d9;
   color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 500;
 }
 
+.btn-search:hover {
+  background: #357abd;
+}
+
+/* --- 합계 --- */
 .summary {
   display: flex;
   gap: 16px;
@@ -330,6 +519,7 @@ h3 { color: #555; margin-bottom: 12px; }
 .summary-item.expense strong { color: #e74c3c; }
 .summary-item.balance strong { color: #333; }
 
+/* --- 거래 등록/수정 폼 --- */
 .form-card {
   padding: 20px;
   background: #fff;
@@ -375,6 +565,7 @@ h3 { color: #555; margin-bottom: 12px; }
 
 .error { color: #e74c3c; font-size: 13px; }
 
+/* --- 거래 목록 --- */
 .tx-list {
   display: flex;
   flex-direction: column;
@@ -456,6 +647,7 @@ h3 { color: #555; margin-bottom: 12px; }
 
 .btn-danger { color: #e74c3c; border-color: #e74c3c; }
 
+/* --- 월별 통계 --- */
 .summary-section {
   margin-top: 2rem;
   padding: 1.5rem;
@@ -484,5 +676,4 @@ h3 { color: #555; margin-bottom: 12px; }
   padding: 0.4rem 0;
   border-bottom: 1px solid #eee;
 }
-
 </style>
