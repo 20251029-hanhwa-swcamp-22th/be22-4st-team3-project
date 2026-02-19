@@ -1,5 +1,6 @@
 package com.mycompany._thstudy.transaction.query.mapper;
 
+import com.mycompany._thstudy.transaction.query.dto.request.TransactionSearchRequest;
 import com.mycompany._thstudy.transaction.query.dto.response.CategoryRawSummary;
 import com.mycompany._thstudy.transaction.query.dto.response.DailySummaryResponse;
 import com.mycompany._thstudy.transaction.query.dto.response.MonthlySummaryResponse;
@@ -7,16 +8,14 @@ import com.mycompany._thstudy.transaction.query.dto.response.TransactionListResp
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Mapper
 public interface TransactionMapper {
 
-  List<TransactionListResponse> findByUserEmailAndDateRange(
+  List<TransactionListResponse> findByFilter(
           @Param("userEmail") String userEmail,
-          @Param("startDate") LocalDate startDate,
-          @Param("endDate") LocalDate endDate
+          @Param("req") TransactionSearchRequest req
   );
 
   List<CategoryRawSummary> findMonthlySummary(

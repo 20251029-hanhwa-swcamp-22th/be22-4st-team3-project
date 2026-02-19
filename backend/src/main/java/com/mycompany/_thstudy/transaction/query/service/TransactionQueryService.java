@@ -1,5 +1,6 @@
 package com.mycompany._thstudy.transaction.query.service;
 
+import com.mycompany._thstudy.transaction.query.dto.request.TransactionSearchRequest;
 import com.mycompany._thstudy.transaction.query.dto.response.CategoryRawSummary;
 import com.mycompany._thstudy.transaction.query.dto.response.DailySummaryResponse;
 import com.mycompany._thstudy.transaction.query.dto.response.MonthlySummaryResponse;
@@ -19,18 +20,14 @@ public class TransactionQueryService {
 
   private final TransactionMapper transactionMapper;
 
-  public List<TransactionListResponse> getTransactions(String userEmail, LocalDate startDate, LocalDate endDate) {
-    // TODO: 구현
-    // 1. startDate null → 당월 1일
-    if(startDate == null){
-      startDate = LocalDate.now().withDayOfMonth(1);
+  public List<TransactionListResponse> getTransactions(String userEmail, TransactionSearchRequest req) {
+    if (req.getStartDate() == null) {
+      req.setStartDate(LocalDate.now().withDayOfMonth(1));
     }
-    // 2. endDate null → 오늘
-    if(endDate == null){
-      endDate = LocalDate.now();
+    if (req.getEndDate() == null) {
+      req.setEndDate(LocalDate.now());
     }
-    // 3. transactionMapper.findByUserEmailAndDateRange(userEmail, startDate, endDate) 호출
-    return transactionMapper.findByUserEmailAndDateRange(userEmail,startDate,endDate);
+    return transactionMapper.findByFilter(userEmail, req);
   }
 
   public MonthlySummaryResponse getMonthlySummary(String userEmail, int year, int month) {

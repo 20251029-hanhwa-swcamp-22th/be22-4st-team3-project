@@ -1,6 +1,7 @@
 package com.mycompany._thstudy.transaction.query.controller;
 
 import com.mycompany._thstudy.common.dto.ApiResponse;
+import com.mycompany._thstudy.transaction.query.dto.request.TransactionSearchRequest;
 import com.mycompany._thstudy.transaction.query.dto.response.DailySummaryResponse;
 import com.mycompany._thstudy.transaction.query.dto.response.MonthlySummaryResponse;
 import com.mycompany._thstudy.transaction.query.dto.response.TransactionListResponse;
@@ -29,9 +30,23 @@ public class TransactionQueryController {
   public ResponseEntity<ApiResponse<List<TransactionListResponse>>> getTransactions(
       @AuthenticationPrincipal UserDetails userDetails,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-    // TODO: transactionQueryService.getTransactions(userDetails.getUsername(), startDate, endDate) → 200
-    List<TransactionListResponse> response = transactionQueryService.getTransactions(userDetails.getUsername(),startDate,endDate);
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+      @RequestParam(required = false) String type,
+      @RequestParam(required = false) Long categoryId,
+      @RequestParam(required = false) String keyword,
+      @RequestParam(required = false) Long minAmount,
+      @RequestParam(required = false) Long maxAmount) {
+
+    TransactionSearchRequest req = new TransactionSearchRequest();
+    req.setStartDate(startDate);
+    req.setEndDate(endDate);
+    req.setType(type);
+    req.setCategoryId(categoryId);
+    req.setKeyword(keyword);
+    req.setMinAmount(minAmount);
+    req.setMaxAmount(maxAmount);
+
+    List<TransactionListResponse> response = transactionQueryService.getTransactions(userDetails.getUsername(), req);
     return ResponseEntity.ok(ApiResponse.success(response));
   }
 
