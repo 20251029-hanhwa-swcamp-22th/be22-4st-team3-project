@@ -134,7 +134,7 @@ function formatAmount(v) {
   align-items: flex-start;
   gap: 16px;
   flex: 1;
-  overflow: hidden;
+  overflow: auto;
 }
 .pie-wrap {
   width: 160px;

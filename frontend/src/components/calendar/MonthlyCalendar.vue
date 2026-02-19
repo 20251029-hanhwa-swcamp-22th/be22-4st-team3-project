@@ -163,7 +163,7 @@ function shortAmount(v) {
   height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 .cal-header {
   display: flex;

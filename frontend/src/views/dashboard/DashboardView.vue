@@ -4,7 +4,7 @@
       <AccountList />
     </aside>
 
-    <div class="right-panel">
+    <div class="right-panel" ref="rightPanelRef">
       <section class="summary-area">
         <div class="summary-cards">
           <article class="summary-card">
@@ -41,16 +41,23 @@
         </div>
       </section>
 
-      <section class="chart-area">
-        <div class="chart-left">
+      <section class="chart-area" ref="chartAreaRef" :style="{ flex: verticalRatio }">
+        <div class="chart-left" :style="{ flex: horizontalRatio }">
           <CategoryPieChart :year="year" :month="month" />
         </div>
-        <div class="chart-right">
+        <div class="resize-handle-h" @mousedown.prevent="startHResize">
+          <div class="handle-line"></div>
+        </div>
+        <div class="chart-right" :style="{ flex: 1 - horizontalRatio }">
           <WeeklyBarChart :year="year" :month="month" />
         </div>
       </section>
 
-      <section class="calendar-area">
+      <div class="resize-handle-v" @mousedown.prevent="startVResize">
+        <div class="handle-line"></div>
+      </div>
+
+      <section class="calendar-area" :style="{ flex: 1 - verticalRatio }">
         <MonthlyCalendar
           :year="year"
           :month="month"
@@ -106,6 +113,66 @@ async function fetchDashboard() {
 function formatAmount(value) {
   return Number(value ?? 0).toLocaleString('ko-KR') + '원'
 }
+
+// --- Resize logic ---
+const rightPanelRef = ref(null)
+const chartAreaRef = ref(null)
+const horizontalRatio = ref(0.5)
+const verticalRatio = ref(0.5)
+
+function startHResize(e) {
+  const chartArea = chartAreaRef.value
+  if (!chartArea) return
+  const startX = e.clientX
+  const startRatio = horizontalRatio.value
+  const containerWidth = chartArea.getBoundingClientRect().width
+
+  document.body.style.cursor = 'col-resize'
+  document.body.style.userSelect = 'none'
+
+  function onMouseMove(e) {
+    const delta = e.clientX - startX
+    horizontalRatio.value = Math.max(0.2, Math.min(0.8, startRatio + delta / containerWidth))
+  }
+
+  function onMouseUp() {
+    document.body.style.cursor = ''
+    document.body.style.userSelect = ''
+    document.removeEventListener('mousemove', onMouseMove)
+    document.removeEventListener('mouseup', onMouseUp)
+  }
+
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('mouseup', onMouseUp)
+}
+
+function startVResize(e) {
+  const panel = rightPanelRef.value
+  if (!panel) return
+  const startY = e.clientY
+  const startRatio = verticalRatio.value
+  const summaryEl = panel.querySelector('.summary-area')
+  const availableHeight = panel.getBoundingClientRect().height
+    - summaryEl.getBoundingClientRect().height - 48
+
+  document.body.style.cursor = 'row-resize'
+  document.body.style.userSelect = 'none'
+
+  function onMouseMove(e) {
+    const delta = e.clientY - startY
+    verticalRatio.value = Math.max(0.2, Math.min(0.8, startRatio + delta / availableHeight))
+  }
+
+  function onMouseUp() {
+    document.body.style.cursor = ''
+    document.body.style.userSelect = ''
+    document.removeEventListener('mousemove', onMouseMove)
+    document.removeEventListener('mouseup', onMouseUp)
+  }
+
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('mouseup', onMouseUp)
+}
 </script>
 
 <style scoped>
@@ -124,11 +191,11 @@ function formatAmount(value) {
 }
 
 .right-panel {
-  display: grid;
-  grid-template-rows: auto 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
   padding: 12px;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .summary-area {
@@ -136,6 +203,7 @@ function formatAmount(value) {
   grid-template-columns: 1.1fr 1fr;
   gap: 12px;
   min-height: 0;
+  flex-shrink: 0;
 }
 
 .summary-cards {
@@ -255,9 +323,7 @@ function formatAmount(value) {
 }
 
 .chart-area {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  display: flex;
   min-height: 0;
 }
 
@@ -265,14 +331,53 @@ function formatAmount(value) {
 .chart-right {
   background: #fff;
   border-radius: 12px;
-  overflow: hidden;
+  overflow: auto;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  min-width: 0;
+}
+
+.resize-handle-h {
+  width: 12px;
+  cursor: col-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.resize-handle-h .handle-line {
+  width: 3px;
+  height: 32px;
+  background: #d0d0d0;
+  border-radius: 2px;
+  transition: background 0.15s;
+}
+.resize-handle-h:hover .handle-line {
+  background: #2196f3;
+}
+
+.resize-handle-v {
+  height: 12px;
+  cursor: row-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.resize-handle-v .handle-line {
+  height: 3px;
+  width: 32px;
+  background: #d0d0d0;
+  border-radius: 2px;
+  transition: background 0.15s;
+}
+.resize-handle-v:hover .handle-line {
+  background: #2196f3;
 }
 
 .calendar-area {
   background: #fff;
   border-radius: 12px;
-  overflow: hidden;
+  overflow: auto;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   min-height: 0;
 }
@@ -298,12 +403,14 @@ function formatAmount(value) {
     border-bottom: 1px solid #e0e0e0;
   }
 
-  .right-panel {
-    grid-template-rows: auto auto auto;
+  .chart-area {
+    flex-direction: column;
+    gap: 12px;
   }
 
-  .chart-area {
-    grid-template-columns: 1fr;
+  .resize-handle-h,
+  .resize-handle-v {
+    display: none;
   }
 
   .summary-cards {

@@ -138,7 +138,8 @@ const chartOptions = {
 .chart-wrap {
   flex: 1;
   position: relative;
-  min-height: 0;
+  min-height: 200px;
+  overflow: auto;
 }
 .loading {
   flex: 1;
