@@ -6,6 +6,8 @@ dist/
 dist-ssr/
 coverage/
 *.tsbuildinfo
+.vite/
+.vite-temp/
 
 # Logs
 logs/
