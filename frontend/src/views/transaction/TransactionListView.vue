@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useTransactionStore } from '../../stores/transaction.js'
 import { useCategoryStore } from '../../stores/category.js'
 import { useAccountStore } from '../../stores/account.js'
+import ExportModal from '../../components/transaction/ExportModal.vue'
 
 const transactionStore = useTransactionStore()
 const categoryStore = useCategoryStore()
@@ -87,7 +88,7 @@ const totalExpense = computed(() =>
 
 function openCreate() {
   editingId.value = null
-  form.value = { accountId: '', categoryId: '', type: 'EXPENSE', amount: '', description: '', transactionDate: today.toISOString().slice(0, 10) }
+  form.value = { categoryId: '', type: 'EXPENSE', amount: '', description: '', transactionDate: today.toISOString().slice(0, 10) }
   showForm.value = true
   error.value = ''
 }
@@ -154,7 +155,10 @@ async function fetchSummary() {
   <div class="transaction-page">
     <div class="page-header">
       <h2>거래 내역</h2>
-      <button @click="openCreate" class="btn-primary">+ 거래 등록</button>
+      <div class="header-actions">
+        <ExportModal />
+        <button @click="openCreate" class="btn-primary">+ 거래 등록</button>
+      </div>
     </div>
 
     <!-- 필터 영역 -->
@@ -313,7 +317,7 @@ async function fetchSummary() {
         <div class="form-row">
           <div class="form-group">
             <label>유형</label>
-            <select v-model="form.type" @change="form.categoryId = ''">
+            <select v-model="form.type">
               <option value="EXPENSE">지출</option>
               <option value="INCOME">수입</option>
             </select>
@@ -402,6 +406,12 @@ async function fetchSummary() {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 h2 { color: #333; margin: 0; }
@@ -694,7 +704,6 @@ h3 { color: #555; margin-bottom: 12px; }
 
 .btn-danger { color: #e74c3c; border-color: #e74c3c; }
 
-/* --- 월별 통계 --- */
 .summary-section {
   margin-top: 2rem;
   padding: 1.5rem;

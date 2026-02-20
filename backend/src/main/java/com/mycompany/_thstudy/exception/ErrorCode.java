@@ -33,7 +33,8 @@ public enum ErrorCode {
   CATEGORY_DUPLICATE_NAME(HttpStatus.CONFLICT, "CONFLICT_002", "이미 존재하는 카테고리 입니다."),
 
   // 500
-  INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SERVER_ERROR_001", "서버 내부 오류가 발생했습니다.");
+  INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SERVER_ERROR_001", "서버 내부 오류가 발생했습니다."),
+  EXPORT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SERVER_ERROR_002", "파일 내보내기에 실패했습니다.");
 
   private final HttpStatus status;
   private final String message;
