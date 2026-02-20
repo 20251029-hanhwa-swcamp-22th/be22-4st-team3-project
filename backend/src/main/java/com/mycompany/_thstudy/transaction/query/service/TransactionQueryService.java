@@ -37,9 +37,9 @@ public class TransactionQueryService {
 
     // INCOME / EXPENSE 분리
     List<CategoryRawSummary> incomeRaw = rawList.stream()
-        .filter(r -> r.getType().equals("INCOME")).toList();
+        .filter(r -> "INCOME".equals(r.getType())).toList();
     List<CategoryRawSummary> expenseRaw = rawList.stream()
-        .filter(r -> r.getType().equals("EXPENSE")).toList();
+        .filter(r -> "EXPENSE".equals(r.getType())).toList();
 
     // 총합 계산
     long totalIncome  = incomeRaw.stream().mapToLong(CategoryRawSummary::getAmount).sum();

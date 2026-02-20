@@ -5,7 +5,6 @@ import com.mycompany._thstudy.transaction.query.dto.request.TransactionSearchReq
 import com.mycompany._thstudy.transaction.query.dto.response.DailySummaryResponse;
 import com.mycompany._thstudy.transaction.query.dto.response.MonthlySummaryResponse;
 import com.mycompany._thstudy.transaction.query.dto.response.TransactionListResponse;
-import com.mycompany._thstudy.transaction.query.mapper.TransactionMapper;
 import com.mycompany._thstudy.transaction.query.service.TransactionQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -24,13 +23,13 @@ public class TransactionQueryController {
 
 
   private final TransactionQueryService transactionQueryService;
-  private final TransactionMapper transactionMapper;
 
   @GetMapping
   public ResponseEntity<ApiResponse<List<TransactionListResponse>>> getTransactions(
       @AuthenticationPrincipal UserDetails userDetails,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+      @RequestParam(required = false) Long accountId,
       @RequestParam(required = false) String type,
       @RequestParam(required = false) Long categoryId,
       @RequestParam(required = false) String keyword,
@@ -40,6 +39,7 @@ public class TransactionQueryController {
     TransactionSearchRequest req = new TransactionSearchRequest();
     req.setStartDate(startDate);
     req.setEndDate(endDate);
+    req.setAccountId(accountId);
     req.setType(type);
     req.setCategoryId(categoryId);
     req.setKeyword(keyword);

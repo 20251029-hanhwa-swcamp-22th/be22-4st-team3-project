@@ -12,6 +12,8 @@ import java.time.LocalDate;
 public class TransactionListResponse {
 
     private Long id;
+    private Long accountId;
+    private String accountName;
     private String type;
     private Long categoryId;
     private String categoryName;
