@@ -16,9 +16,9 @@
       </div>
       <ul class="legend-list">
         <li v-for="(label, i) in chartData.labels" :key="i">
-          <span class="dot" :style="{ background: COLORS[i % COLORS.length] }"></span>
+          <span class="dot" :style="{ background: colors[i % colors.length] }"></span>
           <span class="label">{{ label }}</span>
-          <span class="amount">{{ formatAmount(currentSummary[i]?.amount) }}</span>
+          <span class="amount" :style="{ color: activeTab === 'INCOME' ? '#1976d2' : '#e53935' }">{{ formatAmount(currentSummary[i]?.amount) }}</span>
           <span class="pct">{{ currentSummary[i]?.percentage?.toFixed(1) }}%</span>
         </li>
       </ul>
@@ -43,7 +43,10 @@ const props = defineProps({
   month: { type: Number, required: true },
 })
 
-const COLORS = ['#ef5350', '#ffa726', '#66bb6a', '#42a5f5', '#ab47bc', '#26c6da', '#8d6e63', '#78909c']
+const EXPENSE_COLORS = ['#ef5350', '#ffa726', '#66bb6a', '#42a5f5', '#ab47bc', '#26c6da', '#8d6e63', '#78909c']
+const INCOME_COLORS = ['#1976d2', '#42a5f5', '#26c6da', '#66bb6a', '#81c784', '#4dd0e1', '#29b6f6', '#4fc3f7']
+
+const colors = computed(() => activeTab.value === 'INCOME' ? INCOME_COLORS : EXPENSE_COLORS)
 
 const transactionStore = useTransactionStore()
 const activeTab = ref('EXPENSE')
@@ -72,7 +75,7 @@ const chartData = computed(() => ({
   labels: currentSummary.value.map((c) => c.categoryName),
   datasets: [{
     data: currentSummary.value.map((c) => c.amount),
-    backgroundColor: COLORS,
+    backgroundColor: colors.value,
     borderWidth: 2,
   }],
 }))
@@ -166,7 +169,6 @@ function formatAmount(v) {
   color: #333;
 }
 .amount {
-  color: #e53935;
   font-weight: 600;
 }
 .pct {
