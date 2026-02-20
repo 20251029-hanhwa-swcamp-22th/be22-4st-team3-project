@@ -7,6 +7,11 @@
     <div v-if="loading" class="loading">불러오는 중...</div>
     <div v-else class="chart-wrap">
       <Line :data="chartData" :options="chartOptions" :plugins="[pulsingDotPlugin]" />
+      <span
+        v-if="dotPosition"
+        class="pulse-dot"
+        :style="{ left: dotPosition.x + 'px', top: dotPosition.y + 'px' }"
+      />
     </div>
   </div>
 </template>
@@ -110,49 +115,27 @@ const chartData = computed(() => ({
   ],
 }))
 
+const dotPosition = ref(null)
+
 const pulsingDotPlugin = {
   id: 'pulsingDot',
   afterDatasetsDraw(chart) {
     const dataset = chart.data.datasets[0]
-    if (!dataset?.data?.length) return
+    if (!dataset?.data?.length) {
+      dotPosition.value = null
+      return
+    }
 
     const meta = chart.getDatasetMeta(0)
     const lastIndex = dataset.data.length - 1
     const point = meta.data[lastIndex]
-    if (!point) return
+    if (!point) {
+      dotPosition.value = null
+      return
+    }
 
     const { x, y } = point.getProps(['x', 'y'])
-    const ctx = chart.ctx
-    const t = (Date.now() % 1500) / 1500
-
-    ctx.save()
-
-    // expanding pulse ring
-    const pulseRadius = 4 + t * 10
-    const pulseOpacity = 0.5 * (1 - t)
-    ctx.beginPath()
-    ctx.arc(x, y, pulseRadius, 0, Math.PI * 2)
-    ctx.strokeStyle = `rgba(66, 165, 245, ${pulseOpacity})`
-    ctx.lineWidth = 2
-    ctx.stroke()
-
-    // solid dot
-    ctx.beginPath()
-    ctx.arc(x, y, 4, 0, Math.PI * 2)
-    ctx.fillStyle = '#42a5f5'
-    ctx.fill()
-
-    // white center
-    ctx.beginPath()
-    ctx.arc(x, y, 1.5, 0, Math.PI * 2)
-    ctx.fillStyle = '#fff'
-    ctx.fill()
-
-    ctx.restore()
-
-    requestAnimationFrame(() => {
-      if (chart.canvas) chart.draw()
-    })
+    dotPosition.value = { x, y }
   },
 }
 
@@ -214,5 +197,52 @@ const chartOptions = {
   justify-content: center;
   color: #aaa;
   font-size: 13px;
+}
+.pulse-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #42a5f5;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1;
+}
+.pulse-dot::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translate(-50%, -50%);
+}
+.pulse-dot::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid rgba(66, 165, 245, 0.5);
+  transform: translate(-50%, -50%);
+  animation: pulse-ring 1.5s ease-out infinite;
+}
+@keyframes pulse-ring {
+  0% {
+    width: 8px;
+    height: 8px;
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+  100% {
+    width: 28px;
+    height: 28px;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+  }
 }
 </style>

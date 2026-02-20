@@ -222,7 +222,8 @@ function startVResize(e) {
 .summary-card .label {
   margin: 0;
   font-size: 12px;
-  color: #6d7781;
+  color: black;
+  font-weight: bold;
 }
 
 .summary-card .value {
