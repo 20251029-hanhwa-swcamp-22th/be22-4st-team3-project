@@ -32,6 +32,12 @@ const routes = [
     component: () => import('../views/category/CategoryListView.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/export',
+    name: 'Export',
+    component: () => import('../views/transaction/ExportView.vue'),
+    meta: { requiresAuth: true },
+  },
 ]
 
 const router = createRouter({

@@ -3,7 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useTransactionStore } from '../../stores/transaction.js'
 import { useCategoryStore } from '../../stores/category.js'
 import { useAccountStore } from '../../stores/account.js'
-import { transactionApi } from '../../api/transaction.js'
+import ExportModal from '../../components/transaction/ExportModal.vue'
 
 const transactionStore = useTransactionStore()
 const categoryStore = useCategoryStore()
@@ -139,18 +139,6 @@ function formatAmount(amount) {
   return amount.toLocaleString('ko-KR')
 }
 
-// 내보내기
-async function handleExport(format) {
-  const fn = format === 'csv' ? transactionApi.exportCsv : transactionApi.exportXlsx
-  const blob = await fn({ ...filter.value })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `transactions_${filter.value.startDate}_${filter.value.endDate}.${format}`
-  a.click()
-  URL.revokeObjectURL(url)
-}
-
 // 현재 연월 기본값
 const summaryYear  = ref(new Date().getFullYear())
 const summaryMonth = ref(new Date().getMonth() + 1)
@@ -167,7 +155,10 @@ async function fetchSummary() {
   <div class="transaction-page">
     <div class="page-header">
       <h2>거래 내역</h2>
-      <button @click="openCreate" class="btn-primary">+ 거래 등록</button>
+      <div class="header-actions">
+        <ExportModal />
+        <button @click="openCreate" class="btn-primary">+ 거래 등록</button>
+      </div>
     </div>
 
     <!-- 필터 영역 -->
@@ -242,8 +233,6 @@ async function fetchSummary() {
       <div class="filter-actions">
         <button @click="resetFilter" class="btn-reset">초기화</button>
         <button @click="fetchList" class="btn-search">조회</button>
-        <button @click="handleExport('csv')" class="btn-export">CSV</button>
-        <button @click="handleExport('xlsx')" class="btn-export">Excel</button>
       </div>
     </div>
 
@@ -417,6 +406,12 @@ async function fetchSummary() {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 h2 { color: #333; margin: 0; }
@@ -708,18 +703,6 @@ h3 { color: #555; margin-bottom: 12px; }
 }
 
 .btn-danger { color: #e74c3c; border-color: #e74c3c; }
-
-.btn-export {
-  padding: 8px 12px;
-  font-size: 13px;
-  border: 1px solid #4a90d9;
-  border-radius: 4px;
-  background: #fff;
-  color: #4a90d9;
-  cursor: pointer;
-}
-
-.btn-export:hover { background: #eaf2fb; }
 
 .summary-section {
   margin-top: 2rem;
