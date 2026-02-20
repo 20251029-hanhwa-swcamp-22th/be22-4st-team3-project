@@ -11,6 +11,8 @@ import java.time.LocalDate;
 @Getter
 public class TransactionCreateRequest {
 
+    private Long accountId;   // 선택 사항 — null 이면 계좌 미지정
+
     @NotNull
     private Long categoryId;
 

@@ -2,9 +2,11 @@
 import { ref, onMounted, computed } from 'vue'
 import { useTransactionStore } from '../../stores/transaction.js'
 import { useCategoryStore } from '../../stores/category.js'
+import { useAccountStore } from '../../stores/account.js'
 
 const transactionStore = useTransactionStore()
 const categoryStore = useCategoryStore()
+const accountStore = useAccountStore()
 
 // 기본 필터: 당월 1일 ~ 오늘
 const today = new Date()
@@ -12,6 +14,7 @@ const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
 const filter = ref({
   startDate: firstDay.toISOString().slice(0, 10),
   endDate: today.toISOString().slice(0, 10),
+  accountId: '',
   type: '',
   categoryId: '',
   keyword: '',
@@ -21,11 +24,14 @@ const filter = ref({
 
 const showForm = ref(false)
 const editingId = ref(null)
-const form = ref({ categoryId: '', type: 'EXPENSE', amount: '', description: '', transactionDate: today.toISOString().slice(0, 10) })
+const form = ref({ accountId: '', categoryId: '', type: 'EXPENSE', amount: '', description: '', transactionDate: today.toISOString().slice(0, 10) })
 const error = ref('')
 
 onMounted(async () => {
-  await categoryStore.fetchCategories()
+  await Promise.all([
+    categoryStore.fetchCategories(),
+    accountStore.fetchAccounts(),
+  ])
   await fetchList()
 })
 
@@ -44,6 +50,7 @@ function resetFilter() {
   filter.value = {
     startDate: firstDay.toISOString().slice(0, 10),
     endDate: today.toISOString().slice(0, 10),
+    accountId: '',
     type: '',
     categoryId: '',
     keyword: '',
@@ -80,7 +87,7 @@ const totalExpense = computed(() =>
 
 function openCreate() {
   editingId.value = null
-  form.value = { categoryId: '', type: 'EXPENSE', amount: '', description: '', transactionDate: today.toISOString().slice(0, 10) }
+  form.value = { accountId: '', categoryId: '', type: 'EXPENSE', amount: '', description: '', transactionDate: today.toISOString().slice(0, 10) }
   showForm.value = true
   error.value = ''
 }
@@ -88,6 +95,7 @@ function openCreate() {
 function openEdit(tx) {
   editingId.value = tx.id
   form.value = {
+    accountId: tx.accountId ?? '',
     categoryId: tx.categoryId,
     type: tx.type,
     amount: tx.amount,
@@ -100,7 +108,11 @@ function openEdit(tx) {
 
 async function handleSubmit() {
   error.value = ''
-  const payload = { ...form.value, amount: Number(form.value.amount) }
+  const payload = {
+    ...form.value,
+    amount: Number(form.value.amount),
+    accountId: form.value.accountId !== '' ? Number(form.value.accountId) : null,
+  }
   try {
     if (editingId.value) {
       await transactionStore.updateTransaction(editingId.value, payload)
@@ -156,6 +168,17 @@ async function fetchSummary() {
             <span>~</span>
             <input v-model="filter.endDate" type="date" />
           </div>
+        </div>
+
+        <!-- 계좌 -->
+        <div class="filter-group filter-group--sm">
+          <label>계좌</label>
+          <select v-model="filter.accountId">
+            <option value="">전체</option>
+            <option v-for="acc in accountStore.accounts" :key="acc.id" :value="acc.id">
+              {{ acc.name }}
+            </option>
+          </select>
         </div>
 
         <!-- 유형 -->
@@ -290,7 +313,7 @@ async function fetchSummary() {
         <div class="form-row">
           <div class="form-group">
             <label>유형</label>
-            <select v-model="form.type">
+            <select v-model="form.type" @change="form.categoryId = ''">
               <option value="EXPENSE">지출</option>
               <option value="INCOME">수입</option>
             </select>
@@ -301,6 +324,15 @@ async function fetchSummary() {
               <option value="" disabled>선택</option>
               <option v-for="cat in filteredCategories" :key="cat.id" :value="cat.id">
                 {{ cat.name }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>계좌 <span class="optional">(선택)</span></label>
+            <select v-model="form.accountId">
+              <option value="">미지정</option>
+              <option v-for="acc in accountStore.accounts" :key="acc.id" :value="acc.id">
+                {{ acc.name }}
               </option>
             </select>
           </div>
@@ -341,6 +373,7 @@ async function fetchSummary() {
         <div class="tx-left">
           <span class="tx-date">{{ tx.transactionDate }}</span>
           <span class="tx-category">{{ tx.categoryName }}</span>
+          <span v-if="tx.accountName" class="tx-account">{{ tx.accountName }}</span>
           <span v-if="tx.description" class="tx-desc">{{ tx.description }}</span>
         </div>
         <div class="tx-right">
@@ -596,7 +629,21 @@ h3 { color: #555; margin-bottom: 12px; }
 
 .tx-date { font-size: 13px; color: #999; }
 .tx-category { font-size: 14px; color: #333; font-weight: 500; }
+.tx-account {
+  font-size: 11px;
+  color: #4a90d9;
+  background: #e8f1fb;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-weight: 500;
+}
 .tx-desc { font-size: 13px; color: #888; }
+
+.optional {
+  font-size: 11px;
+  color: #aaa;
+  font-weight: 400;
+}
 
 .tx-right {
   display: flex;
