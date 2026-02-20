@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,30 +25,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-      // TODO: 구현
       // 1. Authorization 헤더에서 Bearer 토큰 추출
       String token = getJwtFromRequest(request);
       // 2. validateToken → getUserIdFromToken
-      if(StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
-        // 3. 토큰에서 userEmail 추출
-        String userEmail = jwtTokenProvider.getUserEmailFromJWTToken(token);
-        // 4. userEmail 사용자 정보(UserDetails) 로드 (DB 등에서 조회)
-        // CustomUserDetailsService 를 통해 사용자 정보를 로드한다.
-        UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+      try {
+        if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
+          // 3. 토큰에서 userEmail 추출
+          String userEmail = jwtTokenProvider.getUserEmailFromJWTToken(token);
+          // 4. userEmail 사용자 정보(UserDetails) 로드 (DB 등에서 조회)
+          UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
-        // 5. Authentication 객체 생성 (권한 정보 포함)
-        UsernamePasswordAuthenticationToken authentication =
-            new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities()
-            );
+          // 5. Authentication 객체 생성 (권한 정보 포함)
+          UsernamePasswordAuthenticationToken authentication =
+              new UsernamePasswordAuthenticationToken(
+                  userDetails, null, userDetails.getAuthorities()
+              );
 
-        // 6. SecurityContextHolder에 Authentication 객체 저장
-        // 이를 통해 이후 필터나 컨트롤러에서 인증된 사용자 정보를 사용할 수 있음 (@AuthenticationPrincipal 등)
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+          // 6. SecurityContextHolder에 Authentication 객체 저장
+          SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+      } catch (BadCredentialsException e) {
+        // 토큰이 만료되었거나 유효하지 않은 경우 인증을 설정하지 않고 통과시킨다.
+        // permitAll() 엔드포인트(예: /api/auth/refresh)는 정상 접근되고,
+        // authenticated() 엔드포인트는 이후 Spring Security가 401을 반환한다.
       }
-      /* if문을 통과했다면 SecurityContextHolder의 Authentication이 설정 된 상태이고,
-       * 통과하지 못했다면 해당 값이 비어있는 상태이다.
-       * 이어지는 필터에서 인증 성공/실패가 가려진다. */
       filterChain.doFilter(request, response);
     }
 

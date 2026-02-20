@@ -8,13 +8,16 @@
         /* TransactionMapper.findByFilter */
         SELECT
             t.id,
+            t.account_id    AS accountId,
+            a.name          AS accountName,
             t.type,
-            t.category_id AS categoryId,
-            c.name AS categoryName,
+            t.category_id   AS categoryId,
+            c.name          AS categoryName,
             t.amount,
             t.description,
             t.transaction_date AS transactionDate
         FROM transactions t
+        LEFT JOIN accounts a ON t.account_id = a.id
         JOIN categories c ON t.category_id = c.id
         JOIN users u ON t.user_id = u.id
         <where>
@@ -24,6 +27,9 @@
             </if>
             <if test="req.endDate != null">
                 AND t.transaction_date &lt;= #{req.endDate}
+            </if>
+            <if test="req.accountId != null">
+                AND t.account_id = #{req.accountId}
             </if>
             <if test="req.type != null and req.type != ''">
                 AND t.type = #{req.type}
@@ -53,7 +59,7 @@
         WHERE u.email = #{userEmail}
           AND YEAR(t.transaction_date) = #{year}
           AND MONTH(t.transaction_date) = #{month}
-        GROUP BY c.name, t.type
+        GROUP BY c.id, c.name, t.type
         ORDER BY t.type, amount DESC
     </select>
 
@@ -76,13 +82,16 @@
             resultType="com.mycompany._thstudy.transaction.query.dto.response.TransactionListResponse">
         SELECT
             t.id,
+            t.account_id    AS accountId,
+            a.name          AS accountName,
             t.type,
-            t.category_id AS categoryId,
-            c.name AS categoryName,
+            t.category_id   AS categoryId,
+            c.name          AS categoryName,
             t.amount,
             t.description,
             t.transaction_date AS transactionDate
         FROM transactions t
+                 LEFT JOIN accounts a ON t.account_id = a.id
                  JOIN categories c ON t.category_id = c.id
                  JOIN users u ON t.user_id = u.id
         WHERE u.email = #{userEmail}

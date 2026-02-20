@@ -1,5 +1,6 @@
 package com.mycompany._thstudy.transaction.command.domain.aggregate;
 
+import com.mycompany._thstudy.account.command.domain.aggregate.Account;
 import com.mycompany._thstudy.category.command.domain.aggregate.Category;
 import com.mycompany._thstudy.category.command.domain.aggregate.CategoryType;
 import com.mycompany._thstudy.user.command.domain.aggregate.User;
@@ -30,6 +31,10 @@ public class Transaction {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id")
+    private Account account;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
@@ -54,8 +59,8 @@ public class Transaction {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    public void update(Category category, CategoryType type, Long amount, String description, LocalDate transactionDate) {
-        // TODO: 각 필드 변경
+    public void update(Account account, Category category, CategoryType type, Long amount, String description, LocalDate transactionDate) {
+        this.account = account;
         this.category = category;
         this.type = type;
         this.amount = amount;

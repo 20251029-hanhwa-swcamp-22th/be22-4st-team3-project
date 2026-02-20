@@ -1,12 +1,12 @@
 <template>
   <div class="chart-section">
     <div class="chart-header">
-      <h3>주당 소비 비교 (이번달 vs 저번달)</h3>
+      <h3>일별 누적 소비 비교 (이번달 vs 저번달)</h3>
     </div>
 
     <div v-if="loading" class="loading">불러오는 중...</div>
     <div v-else class="chart-wrap">
-      <Line :data="chartData" :options="chartOptions" />
+      <Line :data="chartData" :options="chartOptions" :plugins="[pulsingDotPlugin]" />
     </div>
   </div>
 </template>
@@ -35,8 +35,9 @@ const props = defineProps({
 })
 
 const loading = ref(false)
-const thisMonthWeeks = ref([0, 0, 0, 0, 0])
-const lastMonthWeeks = ref([0, 0, 0, 0, 0])
+const thisMonthDaily = ref([])
+const lastMonthDaily = ref([])
+const maxDays = ref(31)
 
 onMounted(() => load())
 watch(() => [props.year, props.month], () => load())
@@ -51,62 +52,127 @@ async function load() {
     const lastMonth = lastDate.getMonth() + 1
 
     const [thisData, lastData] = await Promise.all([
-      fetchWeekly(thisYear, thisMonth),
-      fetchWeekly(lastYear, lastMonth),
+      fetchDailyAccumulate(thisYear, thisMonth),
+      fetchDailyAccumulate(lastYear, lastMonth),
     ])
 
-    thisMonthWeeks.value = thisData
-    lastMonthWeeks.value = lastData
+    thisMonthDaily.value = thisData
+    lastMonthDaily.value = lastData
+    maxDays.value = Math.max(thisData.length, lastData.length)
   } finally {
     loading.value = false
   }
 }
 
-async function fetchWeekly(year, month) {
+async function fetchDailyAccumulate(year, month) {
   const startDate = `${year}-${String(month).padStart(2, '0')}-01`
   const lastDay = new Date(year, month, 0).getDate()
   const endDate = `${year}-${String(month).padStart(2, '0')}-${lastDay}`
   const list = await transactionApi.getList({ startDate, endDate })
 
-  const weeks = [0, 0, 0, 0, 0]
+  const daily = new Array(lastDay).fill(0)
   const expenses = (list ?? []).filter((t) => t.type === 'EXPENSE')
   for (const t of expenses) {
     const day = new Date(t.transactionDate).getDate()
-    const weekIdx = Math.min(Math.floor((day - 1) / 7), 4)
-    weeks[weekIdx] += Number(t.amount)
+    daily[day - 1] += Number(t.amount)
   }
-  return weeks
+
+  // accumulate
+  for (let i = 1; i < daily.length; i++) {
+    daily[i] += daily[i - 1]
+  }
+  return daily
 }
 
 const chartData = computed(() => ({
-  labels: ['1주차', '2주차', '3주차', '4주차', '5주차'],
+  labels: Array.from({ length: maxDays.value }, (_, i) => `${i + 1}일`),
   datasets: [
     {
       label: '이번달',
-      data: thisMonthWeeks.value,
+      data: thisMonthDaily.value,
       borderColor: '#42a5f5',
-      backgroundColor:  'rgba(66, 165, 245, 0.18)',
-      tension: 0,
+      backgroundColor: 'rgba(66, 165, 245, 0.18)',
+      tension: 0.3,
       fill: true,
+      pointRadius: 0,
+      pointHitRadius: 8,
     },
     {
       label: '저번달',
-      data: lastMonthWeeks.value,
+      data: lastMonthDaily.value,
       borderColor: '#ef9a9a',
       backgroundColor: 'rgba(239, 154, 154, 0.18)',
-      tension: 0,
-      fill: true
+      tension: 0.3,
+      fill: true,
+      pointRadius: 0,
+      pointHitRadius: 8,
     },
   ],
 }))
+
+const pulsingDotPlugin = {
+  id: 'pulsingDot',
+  afterDatasetsDraw(chart) {
+    const dataset = chart.data.datasets[0]
+    if (!dataset?.data?.length) return
+
+    const meta = chart.getDatasetMeta(0)
+    const lastIndex = dataset.data.length - 1
+    const point = meta.data[lastIndex]
+    if (!point) return
+
+    const { x, y } = point.getProps(['x', 'y'])
+    const ctx = chart.ctx
+    const t = (Date.now() % 1500) / 1500
+
+    ctx.save()
+
+    // expanding pulse ring
+    const pulseRadius = 4 + t * 10
+    const pulseOpacity = 0.5 * (1 - t)
+    ctx.beginPath()
+    ctx.arc(x, y, pulseRadius, 0, Math.PI * 2)
+    ctx.strokeStyle = `rgba(66, 165, 245, ${pulseOpacity})`
+    ctx.lineWidth = 2
+    ctx.stroke()
+
+    // solid dot
+    ctx.beginPath()
+    ctx.arc(x, y, 4, 0, Math.PI * 2)
+    ctx.fillStyle = '#42a5f5'
+    ctx.fill()
+
+    // white center
+    ctx.beginPath()
+    ctx.arc(x, y, 1.5, 0, Math.PI * 2)
+    ctx.fillStyle = '#fff'
+    ctx.fill()
+
+    ctx.restore()
+
+    requestAnimationFrame(() => {
+      if (chart.canvas) chart.draw()
+    })
+  },
+}
 
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
     legend: { position: 'top' },
+    tooltip: {
+      callbacks: {
+        label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString('ko-KR')}원`,
+      },
+    },
   },
   scales: {
+    x: {
+      ticks: {
+        maxTicksLimit: 10,
+      },
+    },
     y: {
       beginAtZero: true,
       ticks: {
