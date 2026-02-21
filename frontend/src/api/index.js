@@ -21,7 +21,7 @@ api.interceptors.request.use((config) => {
 
 // 응답 인터셉터 - 401 시 갱신 시도 및 로그인 페이지로 이동
 api.interceptors.response.use(
-  response => response.data.data,
+  response => response.config.responseType === 'blob' ? response.data : response.data.data,
     async error => {
         const authStore = useAuthStore()
         const originalRequest = error.config;
