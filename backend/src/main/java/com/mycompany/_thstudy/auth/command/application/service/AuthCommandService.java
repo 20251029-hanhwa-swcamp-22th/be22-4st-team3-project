@@ -19,6 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 
+import com.mycompany._thstudy.category.command.domain.aggregate.Category;
+import com.mycompany._thstudy.category.command.domain.repository.CategoryRepository;
+import com.mycompany._thstudy.category.command.domain.repository.DefaultCategoryRepository;
+import com.mycompany._thstudy.category.command.domain.aggregate.DefaultCategory;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -28,6 +34,8 @@ public class AuthCommandService {
   private final RefreshTokenRepository refreshTokenRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenProvider jwtTokenProvider;
+  private final CategoryRepository categoryRepository;
+  private final DefaultCategoryRepository defaultCategoryRepository;
 
   @Transactional
   public SignupResponse signup(SignupRequest request) {
@@ -49,7 +57,17 @@ public class AuthCommandService {
     //    hint: User savedUser = userRepository.save(user)
     User savedUser = userRepository.save(user);
 
-    // 4. savedUser의 id, email, nickname으로 SignupResponse 반환
+	  List<DefaultCategory> defaults = defaultCategoryRepository.findAll();
+	  defaults.forEach(dc -> categoryRepository.save(
+		  Category.builder()
+			  .user(savedUser)
+			  .name(dc.getName())
+			  .type(dc.getType())
+			  .build()
+	  ));
+
+
+      // 4. savedUser의 id, email, nickname으로 SignupResponse 반환
     //    hint: return new SignupResponse(savedUser.getId(), savedUser.getEmail(), savedUser.getNickname())
     return new SignupResponse(savedUser.getId(), savedUser.getEmail(), savedUser.getNickname());
   }
