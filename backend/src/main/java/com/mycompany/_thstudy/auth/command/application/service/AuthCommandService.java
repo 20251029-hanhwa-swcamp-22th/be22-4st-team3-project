@@ -55,19 +55,6 @@ public class AuthCommandService {
     //    hint: User savedUser = userRepository.save(user)
     User savedUser = userRepository.save(user);
 
-      // 기본 카테고리추가
-      List<Category> defaultCategories = List.of(
-          Category.builder().user(savedUser).name("식비 (Food) ").type(CategoryType.EXPENSE).build(),
-          Category.builder().user(savedUser).name("교통비 (Traffic) ").type(CategoryType.EXPENSE).build(),
-          Category.builder().user(savedUser).name("쇼핑 (Shopping) ").type(CategoryType.EXPENSE).build(),
-          Category.builder().user(savedUser).name("기타 (Etc) ").type(CategoryType.EXPENSE).build(),
-
-          Category.builder().user(savedUser).name("급여 (Salary)").type(CategoryType.INCOME).build(),
-          Category.builder().user(savedUser).name("보너스 (Bonus)").type(CategoryType.INCOME).build(),
-          Category.builder().user(savedUser).name("기타 (Etc) ").type(CategoryType.INCOME).build()
-      );
-      defaultCategories.forEach(categoryRepository::save); // 향상된포문으로 하나씩꺼네서 저장
-
 
       // 4. savedUser의 id, email, nickname으로 SignupResponse 반환
     //    hint: return new SignupResponse(savedUser.getId(), savedUser.getEmail(), savedUser.getNickname())
