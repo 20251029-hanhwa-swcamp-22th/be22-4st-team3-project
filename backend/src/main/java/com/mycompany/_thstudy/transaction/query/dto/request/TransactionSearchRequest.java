@@ -11,6 +11,7 @@ public class TransactionSearchRequest {
 
     private LocalDate startDate;
     private LocalDate endDate;
+    private Long accountId;     // null 이면 전체
     private String type;        // INCOME / EXPENSE (null 이면 전체)
     private Long categoryId;    // null 이면 전체
     private String keyword;     // description LIKE 검색
