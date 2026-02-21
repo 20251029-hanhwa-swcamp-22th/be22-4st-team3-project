@@ -220,20 +220,20 @@ async function fetchSummary() {
 
             <!-- 유형이 전체인 경우: optgroup으로 수입/지출 분리 -->
             <template v-else>
-              <optgroup label="─── 수입 ───">
+              <option disabled>─── 수입 ───</option>
                 <option v-for="cat in filterIncomeCategories" :key="cat.id" :value="cat.id">
                   {{ cat.name }}
                 </option>
-              </optgroup>
-              <optgroup label="─── 지출 ───">
+              <option disabled>─── 지출 ───</option>
                 <option v-for="cat in filterExpenseCategories" :key="cat.id" :value="cat.id">
                   {{ cat.name }}
                 </option>
-              </optgroup>
             </template>
           </select>
         </div>
       </div>
+
+
 
       <div class="filter-row">
         <!-- 키워드 -->
