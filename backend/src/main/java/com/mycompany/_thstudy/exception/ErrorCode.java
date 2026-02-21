@@ -14,6 +14,8 @@ public enum ErrorCode {
   LOGIN_FAILED(HttpStatus.BAD_REQUEST, "BAD_REQUEST_003","이메일 또는 비밀번호가 올바르지 않습니다."),
   NEGATIVE_AMOUNT(HttpStatus.BAD_REQUEST, "BAD_REQUEST_004","거래 금액은 0보다 커야합니다."),
   CATEGORY_TYPE_MISMATCH(HttpStatus.BAD_REQUEST, "BAD_REQUEST_005","카테고리 유형과 거래 유형이 일치하지 않습니다"),
+  INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "BAD_REQUEST_006", "계좌 잔액이 부족합니다."),
+  BALANCE_WOULD_BE_NEGATIVE(HttpStatus.BAD_REQUEST, "BAD_REQUEST_007", "해당 거래를 삭제하면 계좌 잔액이 0원 미만이 되어 불가합니다."),
 
   // 401
   INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED_001", "유효하지 않은 토큰입니다."),
@@ -37,6 +39,6 @@ public enum ErrorCode {
   EXPORT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SERVER_ERROR_002", "파일 내보내기에 실패했습니다.");
 
   private final HttpStatus status;
-  private final String message;
   private final String code;
+  private final String message;
 }

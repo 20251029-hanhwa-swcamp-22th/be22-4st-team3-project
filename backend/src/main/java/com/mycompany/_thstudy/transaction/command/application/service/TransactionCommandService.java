@@ -3,6 +3,7 @@ package com.mycompany._thstudy.transaction.command.application.service;
 import com.mycompany._thstudy.account.command.domain.aggregate.Account;
 import com.mycompany._thstudy.account.command.domain.repository.AccountRepository;
 import com.mycompany._thstudy.category.command.domain.aggregate.Category;
+import com.mycompany._thstudy.category.command.domain.aggregate.CategoryType;
 import com.mycompany._thstudy.category.command.domain.repository.CategoryRepository;
 import com.mycompany._thstudy.exception.BusinessException;
 import com.mycompany._thstudy.exception.ErrorCode;
@@ -51,6 +52,12 @@ public class TransactionCommandService {
 
     Account account = resolveAccount(request.getAccountId(), userEmail);
 
+    // 계좌가 지정된 지출 거래인 경우 잔액 검증
+    if (account != null && request.getType() == CategoryType.EXPENSE
+        && account.getBalance() < request.getAmount()) {
+      throw new BusinessException(ErrorCode.INSUFFICIENT_BALANCE);
+    }
+
     // 4. Transaction.builder()...build() → save()
     Transaction transaction = Transaction.builder()
         .user(user)
@@ -63,6 +70,10 @@ public class TransactionCommandService {
         .build();
 
     Transaction savedTransaction = transactionRepository.save(transaction);
+
+    // 계좌 잔액 반영 (수입: +, 지출: -)
+    applyBalance(account, request.getType(), request.getAmount());
+
     // 5. TransactionCommandResponse 반환
     return TransactionCommandResponse.builder()
         .id(savedTransaction.getId())
@@ -100,7 +111,27 @@ public class TransactionCommandService {
       throw new BusinessException(ErrorCode.CATEGORY_TYPE_MISMATCH);
     }
 
+    // 수정 전 계좌 상태 캡처 (잔액 되돌리기에 사용)
+    Account oldAccount = transaction.getAccount();
+    CategoryType oldType = transaction.getType();
+    Long oldAmount = transaction.getAmount();
+
     Account account = resolveAccount(request.getAccountId(), userEmail);
+
+    // 잔액 검증: 같은 계좌의 지출→지출 수정이면 기존 지출분이 복구될 예정이므로 유효 잔액으로 검증
+    if (account != null && request.getType() == CategoryType.EXPENSE) {
+      long effectiveBalance = account.getBalance();
+      if (oldAccount != null && oldAccount.getId().equals(account.getId())
+          && oldType == CategoryType.EXPENSE) {
+        effectiveBalance += oldAmount;
+      }
+      if (effectiveBalance < request.getAmount()) {
+        throw new BusinessException(ErrorCode.INSUFFICIENT_BALANCE);
+      }
+    }
+
+    // 기존 거래의 계좌 잔액 효과 되돌리기
+    reverseBalance(oldAccount, oldType, oldAmount);
 
     // 5. transaction.update(...)
     transaction.update(
@@ -111,6 +142,9 @@ public class TransactionCommandService {
         request.getDescription(),
         request.getTransactionDate()
     );
+
+    // 새 거래의 계좌 잔액 반영
+    applyBalance(account, request.getType(), request.getAmount());
     // 6. TransactionCommandResponse 반환
     return TransactionCommandResponse.builder()
         .id(transaction.getId())
@@ -123,6 +157,20 @@ public class TransactionCommandService {
         .description(transaction.getDescription())
         .transactionDate(transaction.getTransactionDate())
         .build();
+  }
+
+  /** 계좌 잔액에 거래 효과 적용 (수입: +, 지출: -) */
+  private void applyBalance(Account account, CategoryType type, Long amount) {
+    if (account == null) return;
+    long delta = (type == CategoryType.INCOME) ? amount : -amount;
+    account.updateBalance(account.getBalance() + delta);
+  }
+
+  /** 계좌 잔액에서 거래 효과 되돌리기 (수입: -, 지출: +) */
+  private void reverseBalance(Account account, CategoryType type, Long amount) {
+    if (account == null) return;
+    long delta = (type == CategoryType.INCOME) ? -amount : amount;
+    account.updateBalance(account.getBalance() + delta);
   }
 
   /** accountId가 null이면 null 반환, 있으면 소유권 확인 후 반환 */
@@ -146,6 +194,17 @@ public class TransactionCommandService {
     if(!transaction.getUser().getEmail().equals(userEmail)){
       throw new BusinessException(ErrorCode.ACCESS_DENIED);
     }
+
+    // 수입 거래 삭제 시 계좌 잔액이 0원 미만이 되면 차단
+    Account txAccount = transaction.getAccount();
+    if (txAccount != null && transaction.getType() == CategoryType.INCOME
+        && txAccount.getBalance() - transaction.getAmount() < 0) {
+      throw new BusinessException(ErrorCode.BALANCE_WOULD_BE_NEGATIVE);
+    }
+
+    // 삭제 전 계좌 잔액 효과 되돌리기
+    reverseBalance(transaction.getAccount(), transaction.getType(), transaction.getAmount());
+
     // 3. transactionRepository.delete(transaction)
     transactionRepository.delete(transaction);
   }
