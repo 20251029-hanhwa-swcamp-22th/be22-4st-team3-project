@@ -67,6 +67,13 @@ const filterCategories = computed(() =>
     ? categoryStore.categories.filter((c) => c.type === filter.value.type)
     : categoryStore.categories
 )
+// 수입수출분리용
+const filterIncomeCategories = computed(() =>
+    categoryStore.categories.filter((c) => c.type === 'INCOME')
+)
+const filterExpenseCategories = computed(() =>
+    categoryStore.categories.filter((c) => c.type === 'EXPENSE')
+)
 
 // 유형 변경 시 카테고리 초기화
 function onFilterTypeChange() {
@@ -190,7 +197,9 @@ async function fetchSummary() {
           <label>유형</label>
           <select v-model="filter.type" @change="onFilterTypeChange">
             <option value="">전체</option>
+            <option disabled>──────────</option>
             <option value="INCOME">수입</option>
+            <option disabled>──────────</option>
             <option value="EXPENSE">지출</option>
           </select>
         </div>
@@ -200,12 +209,31 @@ async function fetchSummary() {
           <label>카테고리</label>
           <select v-model="filter.categoryId">
             <option value="">전체</option>
-            <option v-for="cat in filterCategories" :key="cat.id" :value="cat.id">
-              {{ cat.name }}
-            </option>
+
+            <!-- 유형이 선택된 경우: 단순 목록 -->
+            <template v-if="filter.type">
+              <option disabled>──────────</option>
+              <option v-for="cat in filterCategories" :key="cat.id" :value="cat.id">
+                {{ cat.name }}
+              </option>
+            </template>
+
+            <!-- 유형이 전체인 경우: optgroup으로 수입/지출 분리 -->
+            <template v-else>
+              <option disabled>─── 수입 ───</option>
+                <option v-for="cat in filterIncomeCategories" :key="cat.id" :value="cat.id">
+                  {{ cat.name }}
+                </option>
+              <option disabled>─── 지출 ───</option>
+                <option v-for="cat in filterExpenseCategories" :key="cat.id" :value="cat.id">
+                  {{ cat.name }}
+                </option>
+            </template>
           </select>
         </div>
       </div>
+
+
 
       <div class="filter-row">
         <!-- 키워드 -->
