@@ -228,7 +228,7 @@ async function fetchSummary() {
               <optgroup label="─── 지출 ───">
                 <option v-for="cat in filterExpenseCategories" :key="cat.id" :value="cat.id">
                   {{ cat.name }}
-                </option>qkR
+                </option>
               </optgroup>
             </template>
           </select>
