@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: vue-container
-          image: sinwookim/frontend:latest
+          image: sinwookim/frontend:11
           imagePullPolicy: Always
           ports:
             - containerPort: 80
