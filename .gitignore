@@ -17,3 +17,9 @@ nul
 # personal files
 CLAUDE.md
 REFACTOR.md
+k8s-migration-guide.md
+error
+
+# K8s secrets (contains credentials - never commit)
+k8s/backend-secret.yml
+k8s/jenkins.md

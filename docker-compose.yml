@@ -1,0 +1,56 @@
+services:
+
+  # 서비스 이름
+  backend:
+    # 지정된 폴더의 Dockerfile을 이용해서 이미지 빌드
+    build: ./backend
+    # 이미지 설정
+    image: sinwookim/backend
+    # 컨테이너 이름 backend 로 설정
+    container_name: backend
+    # .env 파일의 환경변수를 컨테이너에 주입
+    env_file:
+      - ./backend/.env
+    # 호스트의 8080 포트를 컨테이너의 8080포트로 매핑
+    ports:
+      - "8080:8080"
+    networks:
+      - app-public
+      - app-private
+
+  # 서비스 이름
+  frontend:
+    # 해당 디렉토리의 Dockerfile을 사용해 이미지를 빌드
+    build: ./frontend
+    # 프론트엔드 이미지 이름도 지정 가능
+    image: sinwookim/frontend
+    # 컨테이너 이름을 'frontend'로 설정
+    container_name: frontend
+    # Vite 프록시 대상을 backend 컨테이너로 지정
+    environment:
+      - VITE_API_TARGET=http://backend:8080
+    # 호스트의 5173 포트를 컨테이너의 5173 포트로 매핑
+    ports:
+      - "5173:5173"
+    # backend가 먼저 시작되어야 프록시 연결 가능
+    depends_on:
+      - backend
+    # 동일 네트워크에 연결하여 DNS로 통신 가능
+    networks:
+      - app-public
+
+  # 테스터
+  tester:
+    image: alpine # 이미 존재하는 이미지 사용, 없으면 pull
+    container_name: net-tester
+    command: sleep 3600       # 실습용으로 쉘 접근 전용
+    networks:
+      - app-public
+
+# 네트워크 정의
+networks:
+  app-public:
+    driver: bridge
+  app-private:
+    driver: bridge
+    internal: true            # 외부(호스트) 라우팅 차단
