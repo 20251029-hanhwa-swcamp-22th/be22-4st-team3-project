@@ -49,6 +49,7 @@ public class SecurityConfig {
     // 3. authorizeHttpRequests: /api/auth/** → permitAll, 나머지 → authenticated
         .authorizeHttpRequests(auth ->
             auth.requestMatchers(HttpMethod.POST,"/api/auth/**").permitAll()
+                .requestMatchers("/actuator/**").permitAll()
                 .anyRequest().authenticated()
         )
     // 4. addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
