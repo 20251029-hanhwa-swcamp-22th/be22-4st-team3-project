@@ -17,6 +17,10 @@ services:
     networks:
       - app-public
       - app-private
+    depends_on:
+      - elasticsearch
+      - logstash
+      - prometheus
 
   # 서비스 이름
   frontend:
@@ -46,6 +50,72 @@ services:
     command: sleep 3600       # 실습용으로 쉘 접근 전용
     networks:
       - app-public
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - app-private
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.17.0
+    container_name: logstash
+    volumes:
+      - ./docker/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "5000:5000"
+    depends_on:
+      - elasticsearch
+    networks:
+      - app-private
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - app-private
+      - app-public
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - app-private
+
+  grafana:
+    image: grafana/grafana:9.4.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - app-private
+      - app-public
+
+
+# 컨테이너 종료 후에도 데이터 유지 / 로컬,컨테이너 데이터 동기화
+volumes:
+  es_data:
+  grafana_data:
 
 # 네트워크 정의
 networks:

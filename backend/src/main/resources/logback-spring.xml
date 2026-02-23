@@ -1,0 +1,42 @@
+<configuration>
+    <!-- Spring Boot의 기본 로그 설정 포함 (콘솔 출력 등) -->
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+    <!-- Logstash로 로그를 전송하는 Appender 정의 -->
+    <appender name="stash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <!-- 로그를 보낼 대상 (Logstash의 TCP 포트) -->
+        <destination>logstash:5000</destination>
+
+        <!-- 로그를 JSON 형태로 인코딩하기 위한 설정 -->
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <!-- 로그 발생 시간 추가 -->
+                <timestamp/>
+
+                <!-- 로그를 발생시킨 클래스 또는 로거 이름 추가 -->
+                <loggerName/>
+
+                <!-- 패턴을 통해 사용자 정의 필드 삽입 -->
+                <pattern>
+                    <pattern>
+                        {"service":"account-book","level":"%level"}
+                    </pattern>
+                </pattern>
+
+                <!-- 로그가 발생한 스레드 이름 추가 -->
+                <threadName/>
+
+                <!-- 실제 로그 메시지 출력 -->
+                <message/>
+
+                <!-- 예외 발생 시 스택트레이스 포함 -->
+                <stackTrace/>
+            </providers>
+        </encoder>
+    </appender>
+
+    <!-- 로그 레벨을 INFO 이상으로 설정하고, stash(Appender)로 로그 전송 -->
+    <root level="INFO">
+        <appender-ref ref="stash"/>
+    </root>
+</configuration>

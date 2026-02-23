@@ -26,4 +26,15 @@ logging:
     com.mycompany._thstudy: DEBUG
     org.springframework.web: DEBUG
 
+# ── Actuator ──
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      # 디스크, DB 등 상세 헬스 정보를 응답에 포함
+      show-details: always
+
 # JWT 설정은 profile 파일(application-local.yml, application-prod.yml)에서 관리
