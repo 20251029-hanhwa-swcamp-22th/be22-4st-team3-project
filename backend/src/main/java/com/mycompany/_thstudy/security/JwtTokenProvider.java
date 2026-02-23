@@ -15,8 +15,8 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
-    // TODO: 구현 필요 항목
-    // - @Value("${jwt.secret}") String secret
+  // TODO: 구현 필요 항목
+  // - @Value("${jwt.secret}") String secret
   @Value("${jwt.secret}")
   private String jwtSecret;
   // - @Value("${jwt.expiration}") long expiration

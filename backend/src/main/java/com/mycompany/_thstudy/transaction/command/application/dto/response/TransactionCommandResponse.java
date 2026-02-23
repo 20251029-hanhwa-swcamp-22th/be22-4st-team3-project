@@ -13,6 +13,8 @@ import java.time.LocalDate;
 public class TransactionCommandResponse {
 
     private Long id;
+    private Long accountId;
+    private String accountName;
     private CategoryType type;
     private Long categoryId;
     private String categoryName;

@@ -20,4 +20,10 @@ export const transactionApi = {
     getDaily(year, month) {
       return api.get(`/transactions/daily/${year}/${month}`)
     },
+    exportCsv(params) {
+      return api.get('/transactions/export/csv', { params, responseType: 'blob' })
+    },
+    exportXlsx(params) {
+      return api.get('/transactions/export/xlsx', { params, responseType: 'blob' })
+    },
 }
