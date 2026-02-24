@@ -19,11 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 
-import com.mycompany._thstudy.category.command.domain.aggregate.Category;
-import com.mycompany._thstudy.category.command.domain.repository.CategoryRepository;
-import com.mycompany._thstudy.category.command.domain.repository.DefaultCategoryRepository;
-import com.mycompany._thstudy.category.command.domain.aggregate.DefaultCategory;
-import java.util.List;
+import com.mycompany._thstudy.category.command.application.service.CategoryCommandService;
 
 @Service
 @RequiredArgsConstructor
@@ -34,8 +30,7 @@ public class AuthCommandService {
   private final RefreshTokenRepository refreshTokenRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenProvider jwtTokenProvider;
-  private final CategoryRepository categoryRepository;
-  private final DefaultCategoryRepository defaultCategoryRepository;
+  private final CategoryCommandService categoryCommandService;
 
   @Transactional
   public SignupResponse signup(SignupRequest request) {
@@ -57,14 +52,8 @@ public class AuthCommandService {
     //    hint: User savedUser = userRepository.save(user)
     User savedUser = userRepository.save(user);
 
-	  List<DefaultCategory> defaults = defaultCategoryRepository.findAll();
-	  defaults.forEach(dc -> categoryRepository.save(
-		  Category.builder()
-			  .user(savedUser)
-			  .name(dc.getName())
-			  .type(dc.getType())
-			  .build()
-	  ));
+    // 카테고리에서생성후 auth.command의회원가입에서 호출메서드 추가
+	  categoryCommandService.createDefaultCategories(savedUser);
 
 
       // 4. savedUser의 id, email, nickname으로 SignupResponse 반환

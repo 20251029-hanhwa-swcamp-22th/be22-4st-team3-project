@@ -6,7 +6,10 @@ import com.mycompany._thstudy.category.command.application.dto.response.Category
 import com.mycompany._thstudy.category.command.application.mapper.CategoryDuplicateMapper;
 import com.mycompany._thstudy.category.command.domain.aggregate.Category;
 import com.mycompany._thstudy.category.command.domain.aggregate.CategoryType;
+import com.mycompany._thstudy.category.command.domain.aggregate.DefaultCategory;
 import com.mycompany._thstudy.category.command.domain.repository.CategoryRepository;
+import com.mycompany._thstudy.category.command.domain.repository.DefaultCategoryRepository;
+import java.util.List;
 import com.mycompany._thstudy.exception.BusinessException;
 import com.mycompany._thstudy.exception.ErrorCode;
 import com.mycompany._thstudy.transaction.command.domain.aggregate.Transaction;
@@ -23,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CategoryCommandService {
 
   private final CategoryRepository categoryRepository;
+  private final DefaultCategoryRepository defaultCategoryRepository;
   private final TransactionRepository transactionRepository;
   private final UserRepository userRepository;
   private final CategoryDuplicateMapper categoryDuplicateMapper;
@@ -115,6 +119,17 @@ public class CategoryCommandService {
     // 4. categoryRepository.delete(category)
     // TODO: 구현
     categoryRepository.delete(category);
+  }
+
+  public void createDefaultCategories(User user) {
+    List<DefaultCategory> defaults = defaultCategoryRepository.findAll();
+    defaults.forEach(dc -> categoryRepository.save(
+        Category.builder()
+            .user(user)
+            .name(dc.getName())
+            .type(dc.getType())
+            .build()
+    ));
   }
 
 }
