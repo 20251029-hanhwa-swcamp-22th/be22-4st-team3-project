@@ -25,14 +25,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-
-        // [수정 포인트] GitHub Webhook 경로는 JWT 검사를 아예 수행하지 않고 즉시 통과시킨다.
-        String path = request.getRequestURI();
-        if (path.startsWith("/api/github-webhook")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         // 1. Authorization 헤더에서 Bearer 토큰 추출
         String token = getJwtFromRequest(request);
         // 2. validateToken → getUserIdFromToken

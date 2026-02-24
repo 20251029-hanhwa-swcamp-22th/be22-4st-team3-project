@@ -50,7 +50,6 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth ->
             auth.requestMatchers(HttpMethod.POST,"/api/auth/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
-                    .requestMatchers("/api/github-webhook/**").permitAll()
                 .anyRequest().authenticated()
         )
     // 4. addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
