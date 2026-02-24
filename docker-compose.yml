@@ -30,12 +30,12 @@ services:
     image: sinwookim/frontend
     # 컨테이너 이름을 'frontend'로 설정
     container_name: frontend
-    # Vite 프록시 대상을 backend 컨테이너로 지정
+    # Nginx 프록시 대상을 backend 컨테이너로 지정
     environment:
-      - VITE_API_TARGET=http://backend:8080
-    # 호스트의 5173 포트를 컨테이너의 5173 포트로 매핑
+      - BACKEND_URL=http://backend:8080
+    # 호스트의 80 포트를 컨테이너의 80 포트로 매핑
     ports:
-      - "5173:5173"
+      - "80:80"
     # backend가 먼저 시작되어야 프록시 연결 가능
     depends_on:
       - backend
