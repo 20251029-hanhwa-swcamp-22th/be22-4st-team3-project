@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { transactionApi } from '../../api/transaction.js'
 
 const today = new Date().toISOString().slice(0, 10)
@@ -8,6 +8,10 @@ const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
   .slice(0, 10)
 
 const show = ref(false)
+
+watch(show, (val) => {
+  document.body.style.overflow = val ? 'hidden' : ''
+})
 const startDate = ref(firstDay)
 const endDate = ref(today)
 const loading = ref(false)
