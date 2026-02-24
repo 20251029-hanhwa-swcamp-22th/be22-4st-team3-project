@@ -32,6 +32,12 @@ const routes = [
     component: () => import('../views/category/CategoryListView.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/summary',
+    name: 'Summary',
+    component: () => import('../views/transaction/MonthlySummaryView.vue'),
+    meta: { requiresAuth: true },
+  },
 ]
 
 const router = createRouter({
