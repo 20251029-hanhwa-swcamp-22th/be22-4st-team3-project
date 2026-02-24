@@ -14,6 +14,7 @@ COPY --from=build-stage /app/dist /usr/share/nginx/html
 # 로컬 디렉토리의 nginx.conf 파일을 Nginx의 설정 디렉토리로 복사한다.
 # 이 설정 파일은 Nginx의 동작을 커스터마이즈하는데 사용된다.
 # 예를 들어, 라우팅 규칙, SSL 설정, 로깅 등을 정의할 수 있다.
-COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+COPY ./nginx.conf /etc/nginx/templates/default.conf.template
+ENV BACKEND_URL=http://boot-service:8001
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/bin/sh", "-c", "envsubst '${BACKEND_URL}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
