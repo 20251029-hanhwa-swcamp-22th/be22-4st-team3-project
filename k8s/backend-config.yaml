@@ -5,3 +5,5 @@ metadata:
 data:
   DB_URL: jdbc:mariadb://221.148.116.109:10003/account_book
   timeout: "30"
+  LOGSTASH_HOST: logstash-service
+  LOGSTASH_PORT: "5000"
