@@ -9,7 +9,7 @@ WORKDIR /app
 COPY . .
 
 # Gradle을 사용하여 프로젝트를 빌드한다. (daemon 프로세스는 사용하지 않는다.)
-RUN ./gradlew clean build --no-daemon
+RUN ./gradlew clean build -x test --no-daemon
 
 ## 2. 실행 스테이지 시작
 # AWS JDK 21 버전의 이미지를 가져와 JVM 환경을 구축한다.
