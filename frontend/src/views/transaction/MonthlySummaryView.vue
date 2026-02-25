@@ -167,9 +167,9 @@ function formatAmount(amount) {
   font-weight: 700;
 }
 
-.card.income  { background: #e8f8f0; color: #27ae60; }
-.card.expense { background: #fdecea; color: #e74c3c; }
-.card.balance { background: #f0f4ff; color: #333; }
+.card.income  { background: #fff; color: #27ae60; }
+.card.expense { background: #fff; color: #e74c3c; }
+.card.balance { background: #fff; color: #333; }
 
 .detail-grid {
   display: grid;
@@ -184,13 +184,13 @@ function formatAmount(amount) {
 }
 
 .income-section {
-  background: #f6fdf9;
-  border: 1px solid #d4edda;
+  background: #fff;
+  border: 1px solid #e8e8e8;
 }
 
 .expense-section {
-  background: #fff8f8;
-  border: 1px solid #f5c6cb;
+  background: #fff;
+  border: 1px solid #e8e8e8;
 }
 
 .section-title {
