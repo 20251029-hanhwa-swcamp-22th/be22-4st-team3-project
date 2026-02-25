@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useTransactionStore } from '../../stores/transaction.js'
 import { useCategoryStore } from '../../stores/category.js'
 import { useAccountStore } from '../../stores/account.js'
@@ -146,6 +146,14 @@ function formatAmount(amount) {
   return amount.toLocaleString('ko-KR')
 }
 
+watch(showForm, (val) => {
+  document.body.style.overflow = val ? 'hidden' : ''
+})
+
+watch(() => form.value.type, () => {
+  form.value.categoryId = ''
+})
+
 
 </script>
 
@@ -260,57 +268,64 @@ function formatAmount(amount) {
     </div>
 
 
-    <!-- 거래 등록/수정 폼 -->
-    <div v-if="showForm" class="form-card">
-      <h3>{{ editingId ? '거래 수정' : '거래 등록' }}</h3>
-      <form @submit.prevent="handleSubmit">
-        <div class="form-row">
-          <div class="form-group">
-            <label>유형</label>
-            <select v-model="form.type">
-              <option value="EXPENSE">지출</option>
-              <option value="INCOME">수입</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>카테고리</label>
-            <select v-model="form.categoryId" required>
-              <option value="" disabled>선택</option>
-              <option v-for="cat in filteredCategories" :key="cat.id" :value="cat.id">
-                {{ cat.name }}
-              </option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>계좌 <span class="optional">(선택)</span></label>
-            <select v-model="form.accountId">
-              <option value="">미지정</option>
-              <option v-for="acc in accountStore.accounts" :key="acc.id" :value="acc.id">
-                {{ acc.name }}
-              </option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>날짜</label>
-            <input v-model="form.transactionDate" type="date" required />
-          </div>
+    <!-- 거래 등록/수정 모달 -->
+    <div v-if="showForm" class="modal-overlay" @click.self="showForm = false">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>{{ editingId ? '거래 수정' : '거래 등록' }}</h3>
+          <button type="button" class="modal-close" @click="showForm = false">&times;</button>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>금액</label>
-            <input v-model="form.amount" type="number" min="1" placeholder="금액" required />
+        <form @submit.prevent="handleSubmit">
+          <div class="form-row">
+            <div class="form-group">
+              <label>유형</label>
+              <select v-model="form.type">
+                <option value="EXPENSE">지출</option>
+                <option value="INCOME">수입</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>카테고리</label>
+              <select v-model="form.categoryId" required>
+                <option value="" disabled>선택</option>
+                <option v-for="cat in filteredCategories" :key="cat.id" :value="cat.id">
+                  {{ cat.name }}
+                </option>
+              </select>
+            </div>
           </div>
-          <div class="form-group flex-1">
-            <label>메모</label>
-            <input v-model="form.description" type="text" placeholder="메모 (선택)" />
+          <div class="form-row">
+            <div class="form-group">
+              <label>계좌 <span class="optional">(선택)</span></label>
+              <select v-model="form.accountId">
+                <option value="">미지정</option>
+                <option v-for="acc in accountStore.accounts" :key="acc.id" :value="acc.id">
+                  {{ acc.name }}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>날짜</label>
+              <input v-model="form.transactionDate" type="date" required />
+            </div>
           </div>
-        </div>
-        <p v-if="error" class="error">{{ error }}</p>
-        <div class="form-actions">
-          <button type="button" @click="showForm = false" class="btn-cancel">취소</button>
-          <button type="submit" class="btn-primary">저장</button>
-        </div>
-      </form>
+          <div class="form-row">
+            <div class="form-group">
+              <label>금액</label>
+              <input v-model="form.amount" type="number" min="1" placeholder="금액" required />
+            </div>
+            <div class="form-group flex-1">
+              <label>메모</label>
+              <input v-model="form.description" type="text" placeholder="메모 (선택)" />
+            </div>
+          </div>
+          <p v-if="error" class="error">{{ error }}</p>
+          <div class="form-actions">
+            <button type="button" @click="showForm = false" class="btn-cancel">취소</button>
+            <button type="submit" class="btn-primary">저장</button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- 거래 목록 -->
@@ -512,13 +527,49 @@ h3 { color: #555; margin-bottom: 12px; }
 .summary-item.expense strong { color: #e74c3c; }
 .summary-item.balance strong { color: #333; }
 
-/* --- 거래 등록/수정 폼 --- */
-.form-card {
-  padding: 20px;
+/* --- 거래 등록/수정 모달 --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-  margin-bottom: 20px;
+  border-radius: 10px;
+  padding: 24px;
+  width: 480px;
+  max-width: 90vw;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.modal-header h3 {
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #999;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: #333;
 }
 
 .form-row {
