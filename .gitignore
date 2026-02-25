@@ -22,4 +22,4 @@ error
 
 # K8s secrets (contains credentials - never commit)
 k8s/backend-secret.yml
-jenkins.md
+jenkins-pipeline-script.md
