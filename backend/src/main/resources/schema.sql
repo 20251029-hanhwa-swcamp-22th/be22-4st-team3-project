@@ -76,6 +76,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
+
 CREATE TABLE IF NOT EXISTS default_categories
 (
     id   BIGINT AUTO_INCREMENT PRIMARY KEY,
