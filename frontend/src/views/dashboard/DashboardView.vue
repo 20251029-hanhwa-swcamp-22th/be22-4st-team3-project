@@ -118,7 +118,7 @@ function formatAmount(value) {
 const rightPanelRef = ref(null)
 const chartAreaRef = ref(null)
 const horizontalRatio = ref(0.5)
-const verticalRatio = ref(0.5)
+const verticalRatio = ref(0.65)
 
 function startHResize(e) {
   const chartArea = chartAreaRef.value
@@ -200,7 +200,7 @@ function startVResize(e) {
 
 .summary-area {
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
   min-height: 0;
   flex-shrink: 0;
@@ -281,7 +281,7 @@ function startVResize(e) {
 
 .recent-list li {
   display: grid;
-  grid-template-columns: 90px 1fr 45px auto;
+  grid-template-columns: 90px 1fr 45px 90px;
   gap: 8px;
   align-items: center;
   font-size: 12px;
@@ -315,6 +315,7 @@ function startVResize(e) {
 .tx-amount {
   font-weight: 600;
   color: #2d3a46;
+  text-align: right;
 }
 
 .empty-msg {

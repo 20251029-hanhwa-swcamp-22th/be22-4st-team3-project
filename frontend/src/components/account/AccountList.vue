@@ -13,6 +13,10 @@
       >
         <div class="account-header">
           <span class="account-name">{{ account.name }}</span>
+          <div v-if="expandedIds.has(account.id)" class="account-card-actions" @click.stop>
+            <button class="card-btn-edit" @click="openEdit">수정</button>
+            <button class="card-btn-delete" @click="confirmDelete(account)">삭제</button>
+          </div>
         </div>
         <div v-if="expandedIds.has(account.id)" class="account-balance">
           잔액 : {{ formatAmount(account.balance) }}
@@ -26,11 +30,7 @@
 
     <div class="panel-actions">
       <button class="btn btn-analysis" @click="showAnalysis = true">계좌 분석</button>
-      <div class="btn-row">
-        <button class="btn btn-danger" @click="confirmDelete(selectedAccount)" :disabled="!selectedId">계좌 삭제</button>
-        <button class="btn btn-secondary" @click="openEdit" :disabled="!selectedId">계좌 수정</button>
-        <button class="btn btn-primary" @click="showAdd = true">계좌 추가</button>
-      </div>
+      <button class="btn btn-primary" @click="showAdd = true">계좌 추가</button>
     </div>
 
     <!-- 계좌 추가 모달 -->
@@ -221,28 +221,33 @@ async function updateSelectedAccount() {
 .account-list {
   flex: 1;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 8px;
+  align-content: start;
 }
 .account-card {
-  background: #5bb8f5;
+  background: #fff;
+  border: 1px solid #e0e8f0;
   border-radius: 12px;
   padding: 12px 16px;
   cursor: pointer;
   transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
-  color: #fff;
+  color: #2d3a46;
 }
-.account-card:hover {
-  background: #42a5f5;
+.account-card:hover:not(:has(.account-card-actions:hover)) {
+  background: #eaf2fb;
   transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(33, 150, 243, 0.3);
+  box-shadow: 0 3px 8px rgba(74, 144, 217, 0.15);
 }
 .account-card.active {
-  background: #2196f3;
+  background: #eaf2fb;
+  border-color: #4a90d9;
+  color: #2d3a46;
 }
-.account-card.active:hover {
-  background: #1e88e5;
+.account-card.active:hover:not(:has(.account-card-actions:hover)) {
+  background: #dbeeff;
+  border-color: #357abd;
 }
 .account-header {
   display: flex;
@@ -257,6 +262,37 @@ async function updateSelectedAccount() {
   margin-top: 6px;
   font-size: 13px;
   opacity: 0.9;
+}
+.account-card-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+.card-btn-edit,
+.card-btn-delete {
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.card-btn-edit {
+  border: 1px solid #4a90d9;
+  color: #4a90d9;
+}
+.card-btn-edit:hover {
+  background: rgba(74, 144, 217, 0.1);
+}
+.card-btn-delete {
+  border: 1px solid #e53935;
+  color: #e53935;
+}
+.card-btn-delete:hover {
+  background: rgba(229, 57, 53, 0.08);
 }
 .btn-icon {
   background: #1a1a1a;
@@ -280,34 +316,30 @@ async function updateSelectedAccount() {
 }
 .panel-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 8px;
   margin-top: 12px;
 }
-.btn-row {
-  display: flex;
-  gap: 8px;
-}
 .btn {
   flex: 1;
-  padding: 10px 0;
-  border: none;
-  border-radius: 20px;
+  padding: 8px 0;
+  border-radius: 8px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
 }
 .btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 .btn-analysis {
-  background: #5bb8f5;
-  color: #fff;
-  transition: background 0.2s, transform 0.1s;
+  background: transparent;
+  color: #4a90d9;
+  border: 1px solid #4a90d9;
 }
 .btn-analysis:not(:disabled):hover {
-  background: #42a5f5;
+  background: rgba(74, 144, 217, 0.08);
   transform: translateY(-1px);
 }
 .btn-danger {
@@ -320,21 +352,23 @@ async function updateSelectedAccount() {
   transform: translateY(-1px);
 }
 .btn-primary {
-  background: #5bb8f5;
+  background: #4a90d9;
   color: #fff;
-  transition: background 0.2s, transform 0.1s;
+  border: 1px solid #4a90d9;
 }
 .btn-primary:not(:disabled):hover {
-  background: #42a5f5;
+  background: #357abd;
+  border-color: #357abd;
   transform: translateY(-1px);
 }
 .btn-secondary {
-  background: #eee;
-  color: #333;
+  background: #fff;
+  color: #555;
+  border: 1px solid #ddd;
   transition: background 0.2s, transform 0.1s;
 }
 .btn-secondary:not(:disabled):hover {
-  background: #e0e0e0;
+  background: #f5f5f5;
   transform: translateY(-1px);
 }
 .modal-overlay {
