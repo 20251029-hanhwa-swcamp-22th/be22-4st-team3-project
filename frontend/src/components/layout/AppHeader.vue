@@ -30,8 +30,8 @@ async function handleLogout() {
       <nav v-if="authStore.isLoggedIn">
         <router-link to="/">대시보드</router-link>
         <router-link to="/transactions">거래내역</router-link>
+        <router-link to="/summary">월별통계</router-link>
         <router-link to="/categories">카테고리</router-link>
-        <router-link to="/export">내보내기</router-link>
       </nav>
     </div>
     <div class="header-right" v-if="authStore.isLoggedIn">

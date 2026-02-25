@@ -67,6 +67,13 @@ const filterCategories = computed(() =>
     ? categoryStore.categories.filter((c) => c.type === filter.value.type)
     : categoryStore.categories
 )
+// 수입수출분리용
+const filterIncomeCategories = computed(() =>
+    categoryStore.categories.filter((c) => c.type === 'INCOME')
+)
+const filterExpenseCategories = computed(() =>
+    categoryStore.categories.filter((c) => c.type === 'EXPENSE')
+)
 
 // 유형 변경 시 카테고리 초기화
 function onFilterTypeChange() {
@@ -139,15 +146,6 @@ function formatAmount(amount) {
   return amount.toLocaleString('ko-KR')
 }
 
-// 현재 연월 기본값
-const summaryYear  = ref(new Date().getFullYear())
-const summaryMonth = ref(new Date().getMonth() + 1)
-const showSummary  = ref(false)
-
-async function fetchSummary() {
-  await transactionStore.fetchMonthlySummary(summaryYear.value, summaryMonth.value)
-  showSummary.value = true
-}
 
 </script>
 
@@ -200,12 +198,30 @@ async function fetchSummary() {
           <label>카테고리</label>
           <select v-model="filter.categoryId">
             <option value="">전체</option>
-            <option v-for="cat in filterCategories" :key="cat.id" :value="cat.id">
-              {{ cat.name }}
-            </option>
+
+            <!-- 유형이 선택된 경우: 단순 목록 -->
+            <template v-if="filter.type">
+              <option v-for="cat in filterCategories" :key="cat.id" :value="cat.id">
+                {{ cat.name }}
+              </option>
+            </template>
+
+            <!-- 유형이 전체인 경우: optgroup으로 수입/지출 분리 -->
+            <template v-else>
+              <option disabled>─── 수입 ───</option>
+                <option v-for="cat in filterIncomeCategories" :key="cat.id" :value="cat.id">
+                  {{ cat.name }}
+                </option>
+              <option disabled>─── 지출 ───</option>
+                <option v-for="cat in filterExpenseCategories" :key="cat.id" :value="cat.id">
+                  {{ cat.name }}
+                </option>
+            </template>
           </select>
         </div>
       </div>
+
+
 
       <div class="filter-row">
         <!-- 키워드 -->
@@ -242,72 +258,6 @@ async function fetchSummary() {
       <div class="summary-item expense">지출 <strong>{{ formatAmount(totalExpense) }}원</strong></div>
       <div class="summary-item balance">잔액 <strong>{{ formatAmount(totalIncome - totalExpense) }}원</strong></div>
     </div>
-
-    <!-- 월별 통계 섹션 -->
-    <section class="summary-section">
-      <h2>월별 통계</h2>
-
-      <!-- 연월 선택 -->
-      <div class="summary-filter">
-        <input type="number" v-model="summaryYear" min="2000" max="2100" />
-        <span>년</span>
-        <input type="number" v-model="summaryMonth" min="1" max="12" />
-        <span>월</span>
-        <button @click="fetchSummary">조회</button>
-      </div>
-
-      <!-- 통계 결과 -->
-      <div v-if="showSummary && transactionStore.monthlySummary">
-
-        <!-- 총합 카드 -->
-        <div class="summary-cards">
-          <div class="card income">
-            수입 {{ formatAmount(transactionStore.monthlySummary.totalIncome) }}원
-          </div>
-          <div class="card expense">
-            지출 {{ formatAmount(transactionStore.monthlySummary.totalExpense) }}원
-          </div>
-          <div class="card balance">
-            잔액 {{ formatAmount(transactionStore.monthlySummary.balance) }}원
-          </div>
-        </div>
-
-        <!-- 카테고리별 수입 -->
-        <div class="category-summary">
-          <h3>수입 내역</h3>
-          <div v-if="transactionStore.monthlySummary.incomeSummary.length === 0">
-            내역 없음
-          </div>
-          <div
-              v-for="item in transactionStore.monthlySummary.incomeSummary"
-              :key="item.categoryName"
-              class="category-row"
-          >
-            <span>{{ item.categoryName }}</span>
-            <span>{{ formatAmount(item.amount) }}원</span>
-            <span>{{ item.percentage.toFixed(1) }}%</span>
-          </div>
-        </div>
-
-        <!-- 카테고리별 지출 -->
-        <div class="category-summary">
-          <h3>지출 내역</h3>
-          <div v-if="transactionStore.monthlySummary.expenseSummary.length === 0">
-            내역 없음
-          </div>
-          <div
-              v-for="item in transactionStore.monthlySummary.expenseSummary"
-              :key="item.categoryName"
-              class="category-row"
-          >
-            <span>{{ item.categoryName }}</span>
-            <span>{{ formatAmount(item.amount) }}원</span>
-            <span>{{ item.percentage.toFixed(1) }}%</span>
-          </div>
-        </div>
-
-      </div>
-    </section>
 
 
     <!-- 거래 등록/수정 폼 -->
@@ -704,32 +654,4 @@ h3 { color: #555; margin-bottom: 12px; }
 
 .btn-danger { color: #e74c3c; border-color: #e74c3c; }
 
-.summary-section {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.summary-filter {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.summary-filter input {
-  width: 70px;
-  padding: 0.3rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  text-align: center;
-}
-
-.category-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.4rem 0;
-  border-bottom: 1px solid #eee;
-}
 </style>

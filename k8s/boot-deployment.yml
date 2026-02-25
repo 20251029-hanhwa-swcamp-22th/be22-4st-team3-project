@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boot-deployment
+spec:
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: boot
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: boot
+    spec:
+      containers:
+        - name: boot-container
+          image: sinwookim/backend:31
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: backend-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: boot-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8001
+      targetPort: 8080
+  selector:
+    app: boot

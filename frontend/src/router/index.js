@@ -33,9 +33,9 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/export',
-    name: 'Export',
-    component: () => import('../views/transaction/ExportView.vue'),
+    path: '/summary',
+    name: 'Summary',
+    component: () => import('../views/transaction/MonthlySummaryView.vue'),
     meta: { requiresAuth: true },
   },
 ]

@@ -5,7 +5,8 @@ import { transactionApi } from '../api/transaction.js'
 export const useTransactionStore = defineStore('transaction', () => {
   const transactions = ref([])
   const loading = ref(false)
-    const monthlySummary = ref(null);
+  const summaryLoading = ref(false)
+  const monthlySummary = ref(null)
 
   async function fetchTransactions(params) {
     loading.value = true
@@ -35,15 +36,15 @@ export const useTransactionStore = defineStore('transaction', () => {
     transactions.value = transactions.value.filter((t) => t.id !== id)
   }
 
-    async function fetchMonthlySummary(year, month) {
-        loading.value = true
-        try {
-            const data = await transactionApi.getSummary(year, month)
-            monthlySummary.value = data
-        } finally {
-            loading.value = false
-        }
+  async function fetchMonthlySummary(year, month) {
+    summaryLoading.value = true
+    try {
+      const data = await transactionApi.getSummary(year, month)
+      monthlySummary.value = data
+    } finally {
+      summaryLoading.value = false
     }
+  }
 
-  return { transactions, loading, monthlySummary, fetchTransactions, createTransaction, updateTransaction, removeTransaction ,fetchMonthlySummary}
+  return { transactions, loading, summaryLoading, monthlySummary, fetchTransactions, createTransaction, updateTransaction, removeTransaction, fetchMonthlySummary }
 })

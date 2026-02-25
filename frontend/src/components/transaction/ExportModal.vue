@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { transactionApi } from '../../api/transaction.js'
 
 const today = new Date().toISOString().slice(0, 10)
@@ -8,6 +8,10 @@ const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
   .slice(0, 10)
 
 const show = ref(false)
+
+watch(show, (val) => {
+  document.body.style.overflow = val ? 'hidden' : ''
+})
 const startDate = ref(firstDay)
 const endDate = ref(today)
 const loading = ref(false)
@@ -36,7 +40,9 @@ async function handleExport(format) {
 
 <template>
   <!-- 아이콘 버튼 -->
-  <button @click="show = true" class="btn-icon" title="내보내기">
+  <div class="tooltip-wrap">
+  <button @click="show = true" class="btn-icon">
+
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -46,6 +52,8 @@ async function handleExport(format) {
       <polyline points="10 9 9 9 8 9"/>
     </svg>
   </button>
+  <span class="tooltip-text">내보내기</span>
+  </div>
 
   <!-- 모달 -->
   <div v-if="show" class="modal-overlay" @click.self="show = false">
@@ -80,6 +88,42 @@ async function handleExport(format) {
 </template>
 
 <style scoped>
+.tooltip-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.tooltip-wrap:hover .tooltip-text {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.tooltip-text {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: #333;
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+  padding: 5px 10px;
+  border-radius: 6px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.tooltip-text::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #333;
+}
+
 .btn-icon {
   display: flex;
   align-items: center;

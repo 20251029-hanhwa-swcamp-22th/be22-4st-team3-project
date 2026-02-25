@@ -49,6 +49,7 @@ public class SecurityConfig {
     // 3. authorizeHttpRequests: /api/auth/** → permitAll, 나머지 → authenticated
         .authorizeHttpRequests(auth ->
             auth.requestMatchers(HttpMethod.POST,"/api/auth/**").permitAll()
+                .requestMatchers("/actuator/**").permitAll()
                 .anyRequest().authenticated()
         )
     // 4. addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -75,7 +76,7 @@ public class SecurityConfig {
   @Bean
   public UrlBasedCorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
-    config.addAllowedOrigin("http://localhost:5173"); // 허용할 도메인
+    config.addAllowedOriginPattern("*"); // 모든 도메인 허용 (ngrok 등 외부 접속 지원)
     config.addAllowedHeader("*"); // 모든 헤더 허용
     config.addAllowedMethod("*"); // 모든 HTTP 메소드 허용
 

@@ -1,0 +1,126 @@
+services:
+
+  # 서비스 이름
+  backend:
+    # 지정된 폴더의 Dockerfile을 이용해서 이미지 빌드
+    build: ./backend
+    # 이미지 설정
+    image: sinwookim/backend
+    # 컨테이너 이름 backend 로 설정
+    container_name: backend
+    # .env 파일의 환경변수를 컨테이너에 주입
+    env_file:
+      - ./backend/.env
+    # 호스트의 8080 포트를 컨테이너의 8080포트로 매핑
+    ports:
+      - "8080:8080"
+    networks:
+      - app-public
+      - app-private
+    depends_on:
+      - elasticsearch
+      - logstash
+      - prometheus
+
+  # 서비스 이름
+  frontend:
+    # 해당 디렉토리의 Dockerfile을 사용해 이미지를 빌드
+    build: ./frontend
+    # 프론트엔드 이미지 이름도 지정 가능
+    image: sinwookim/frontend
+    # 컨테이너 이름을 'frontend'로 설정
+    container_name: frontend
+    # Nginx 프록시 대상을 backend 컨테이너로 지정
+    environment:
+      - BACKEND_URL=http://backend:8080
+    # 호스트의 80 포트를 컨테이너의 80 포트로 매핑
+    ports:
+      - "80:80"
+    # backend가 먼저 시작되어야 프록시 연결 가능
+    depends_on:
+      - backend
+    # 동일 네트워크에 연결하여 DNS로 통신 가능
+    networks:
+      - app-public
+
+  # 테스터
+  tester:
+    image: alpine # 이미 존재하는 이미지 사용, 없으면 pull
+    container_name: net-tester
+    command: sleep 3600       # 실습용으로 쉘 접근 전용
+    networks:
+      - app-public
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - app-private
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.17.0
+    container_name: logstash
+    volumes:
+      - ./docker/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "5000:5000"
+    depends_on:
+      - elasticsearch
+    networks:
+      - app-private
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - app-private
+      - app-public
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - app-private
+
+  grafana:
+    image: grafana/grafana:9.4.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - app-private
+      - app-public
+
+
+# 컨테이너 종료 후에도 데이터 유지 / 로컬,컨테이너 데이터 동기화
+volumes:
+  es_data:
+  grafana_data:
+
+# 네트워크 정의
+networks:
+  app-public:
+    driver: bridge
+  app-private:
+    driver: bridge
+    internal: true            # 외부(호스트) 라우팅 차단
