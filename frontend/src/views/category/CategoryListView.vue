@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useCategoryStore } from '../../stores/category.js'
 
 const categoryStore = useCategoryStore()
@@ -49,6 +49,10 @@ async function handleDelete(id) {
     alert(e.response?.data?.message || '삭제에 실패했습니다.')
   }
 }
+
+watch(showForm, (val) => {
+  document.body.style.overflow = val ? 'hidden' : ''
+})
 </script>
 
 <template>
@@ -58,29 +62,34 @@ async function handleDelete(id) {
       <button @click="openCreate" class="btn-primary">+ 추가</button>
     </div>
 
-    <!-- 카테고리 폼 -->
-    <div v-if="showForm" class="form-card">
-      <h3>{{ editingId ? '카테고리 수정' : '카테고리 추가' }}</h3>
-      <form @submit.prevent="handleSubmit">
-        <div class="form-row">
-          <div class="form-group">
-            <label>유형</label>
-            <select v-model="form.type" :disabled="!!editingId">
-              <option value="EXPENSE">지출</option>
-              <option value="INCOME">수입</option>
-            </select>
-          </div>
-          <div class="form-group flex-1">
-            <label>카테고리명</label>
-            <input v-model="form.name" type="text" placeholder="예: 식비, 월급" required />
-          </div>
+    <!-- 카테고리 추가/수정 모달 -->
+    <div v-if="showForm" class="modal-overlay" @click.self="showForm = false">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>{{ editingId ? '카테고리 수정' : '카테고리 추가' }}</h3>
+          <button type="button" class="modal-close" @click="showForm = false">&times;</button>
         </div>
-        <p v-if="error" class="error">{{ error }}</p>
-        <div class="form-actions">
-          <button type="button" @click="showForm = false" class="btn-cancel">취소</button>
-          <button type="submit" class="btn-primary">저장</button>
-        </div>
-      </form>
+        <form @submit.prevent="handleSubmit">
+          <div class="form-row">
+            <div class="form-group">
+              <label>유형</label>
+              <select v-model="form.type" :disabled="!!editingId">
+                <option value="EXPENSE">지출</option>
+                <option value="INCOME">수입</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label>카테고리명</label>
+              <input v-model="form.name" type="text" placeholder="예: 식비, 월급" required />
+            </div>
+          </div>
+          <p v-if="error" class="error">{{ error }}</p>
+          <div class="form-actions">
+            <button type="button" @click="showForm = false" class="btn-cancel">취소</button>
+            <button type="submit" class="btn-primary">저장</button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- 카테고리 목록 -->
@@ -137,12 +146,48 @@ async function handleDelete(id) {
 h2 { color: #333; margin: 0; }
 h3 { color: #555; margin-bottom: 12px; }
 
-.form-card {
-  padding: 20px;
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-  margin-bottom: 24px;
+  border-radius: 10px;
+  padding: 24px;
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.modal-header h3 {
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #999;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: #333;
 }
 
 .form-row {
