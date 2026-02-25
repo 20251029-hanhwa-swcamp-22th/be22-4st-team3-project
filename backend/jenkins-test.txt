@@ -1,12 +1,1 @@
-test webhook
-
-
-test webhook
-test webhook
-
-test jenkins
-
-test jenkins2
-test jenkins3
-test jenkins4
-test jenkins5
+test jenkins pipelines
