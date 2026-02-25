@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -47,5 +48,21 @@ public class TransactionCommandController {
     // TODO: transactionCommandService.deleteTransaction(userDetails.getUsername(), id) → 204
     transactionCommandService.deleteTransaction(userDetails.getUsername(),id);
     return ResponseEntity.noContent().build();
+  }
+
+  @PostMapping("/import/csv")
+  public ResponseEntity<ApiResponse<Integer>> importCsv(
+      @AuthenticationPrincipal UserDetails userDetails,
+      @RequestParam("file") MultipartFile file) {
+    int count = transactionCommandService.importCsv(userDetails.getUsername(), file);
+    return ResponseEntity.ok(ApiResponse.success(count));
+  }
+
+  @PostMapping("/import/xlsx")
+  public ResponseEntity<ApiResponse<Integer>> importXlsx(
+      @AuthenticationPrincipal UserDetails userDetails,
+      @RequestParam("file") MultipartFile file) {
+    int count = transactionCommandService.importXlsx(userDetails.getUsername(), file);
+    return ResponseEntity.ok(ApiResponse.success(count));
   }
 }

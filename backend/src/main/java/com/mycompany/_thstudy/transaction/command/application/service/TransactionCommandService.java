@@ -17,6 +17,16 @@ import com.mycompany._thstudy.user.command.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -207,5 +217,98 @@ public class TransactionCommandService {
 
     // 3. transactionRepository.delete(transaction)
     transactionRepository.delete(transaction);
+  }
+
+  public int importCsv(String userEmail, MultipartFile file) {
+    try {
+      String content = new String(file.getBytes(), StandardCharsets.UTF_8);
+      if (content.startsWith("\uFEFF")) content = content.substring(1); // BOM 제거
+
+      String[] lines = content.split("\\r?\\n");
+      User user = userRepository.findByEmail(userEmail)
+          .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+      List<Transaction> transactions = new ArrayList<>();
+      for (int i = 1; i < lines.length; i++) { // 헤더 스킵
+        if (lines[i].isBlank()) continue;
+        transactions.add(parseCsvRow(lines[i], user, userEmail));
+      }
+      for (Transaction tx : transactions) transactionRepository.save(tx);
+      return transactions.size();
+
+    } catch (BusinessException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new BusinessException(ErrorCode.IMPORT_FAILED);
+    }
+  }
+
+  public int importXlsx(String userEmail, MultipartFile file) {
+    try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
+      Sheet sheet = workbook.getSheetAt(0);
+      User user = userRepository.findByEmail(userEmail)
+          .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+      List<Transaction> transactions = new ArrayList<>();
+      for (int i = 1; i <= sheet.getLastRowNum(); i++) { // 헤더 스킵
+        Row row = sheet.getRow(i);
+        if (row == null) continue;
+
+        LocalDate date = LocalDate.parse(row.getCell(0).getStringCellValue().trim());
+        String typeStr = row.getCell(1).getStringCellValue().trim();
+        CategoryType type = "수입".equals(typeStr) ? CategoryType.INCOME : CategoryType.EXPENSE;
+        String categoryName = row.getCell(2).getStringCellValue().trim();
+        long amount = (long) row.getCell(3).getNumericCellValue();
+        Cell memoCell = row.getCell(4);
+        String description = (memoCell != null) ? memoCell.getStringCellValue() : "";
+
+        Category category = categoryRepository.findByUserEmailAndName(userEmail, categoryName)
+            .orElseGet(() -> categoryRepository.findFirstByUserEmailAndType(userEmail, type)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND)));
+
+        transactions.add(Transaction.builder()
+            .user(user).account(null).category(category)
+            .type(type).amount(amount).description(description)
+            .transactionDate(date).build());
+      }
+      for (Transaction tx : transactions) transactionRepository.save(tx);
+      return transactions.size();
+
+    } catch (BusinessException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new BusinessException(ErrorCode.IMPORT_FAILED);
+    }
+  }
+
+  private Transaction parseCsvRow(String line, User user, String userEmail) {
+    String[] cols = parseCsvLine(line);
+    LocalDate date = LocalDate.parse(cols[0].trim());
+    CategoryType type = "수입".equals(cols[1].trim()) ? CategoryType.INCOME : CategoryType.EXPENSE;
+    String categoryName = cols[2].trim();
+    long amount = Long.parseLong(cols[3].trim());
+    String description = cols.length > 4 ? cols[4].trim() : "";
+
+    Category category = categoryRepository.findByUserEmailAndName(userEmail, categoryName)
+        .orElseGet(() -> categoryRepository.findFirstByUserEmailAndType(userEmail, type)
+            .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND)));
+
+    return Transaction.builder()
+        .user(user).account(null).category(category)
+        .type(type).amount(amount).description(description)
+        .transactionDate(date).build();
+  }
+
+  private String[] parseCsvLine(String line) {
+    List<String> result = new ArrayList<>();
+    StringBuilder sb = new StringBuilder();
+    boolean inQuote = false;
+    for (char c : line.toCharArray()) {
+      if (c == '"') { inQuote = !inQuote; }
+      else if (c == ',' && !inQuote) { result.add(sb.toString()); sb = new StringBuilder(); }
+      else { sb.append(c); }
+    }
+    result.add(sb.toString());
+    return result.toArray(new String[0]);
   }
 }

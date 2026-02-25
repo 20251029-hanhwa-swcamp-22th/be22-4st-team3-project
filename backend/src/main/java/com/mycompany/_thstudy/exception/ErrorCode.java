@@ -36,7 +36,9 @@ public enum ErrorCode {
 
   // 500
   INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SERVER_ERROR_001", "서버 내부 오류가 발생했습니다."),
-  EXPORT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SERVER_ERROR_002", "파일 내보내기에 실패했습니다.");
+  EXPORT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SERVER_ERROR_002", "파일 내보내기에 실패했습니다."),
+  IMPORT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SERVER_ERROR_003", "파일 가져오기에 실패했습니다."),
+  INVALID_FILE_FORMAT(HttpStatus.BAD_REQUEST, "BAD_REQUEST_008", "파일 형식이 올바르지 않습니다.");
 
   private final HttpStatus status;
   private final String code;
