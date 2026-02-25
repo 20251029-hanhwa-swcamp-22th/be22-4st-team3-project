@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: boot-container
-          image: sinwookim/backend:35
+          image: sinwookim/backend:37
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
