@@ -19,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 
+import com.mycompany._thstudy.category.command.application.service.CategoryCommandService;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -28,6 +30,7 @@ public class AuthCommandService {
   private final RefreshTokenRepository refreshTokenRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtTokenProvider jwtTokenProvider;
+  private final CategoryCommandService categoryCommandService;
 
   @Transactional
   public SignupResponse signup(SignupRequest request) {
@@ -49,7 +52,11 @@ public class AuthCommandService {
     //    hint: User savedUser = userRepository.save(user)
     User savedUser = userRepository.save(user);
 
-    // 4. savedUser의 id, email, nickname으로 SignupResponse 반환
+    // 카테고리에서생성후 auth.command의회원가입에서 호출메서드 추가
+	  categoryCommandService.createDefaultCategories(savedUser);
+
+
+      // 4. savedUser의 id, email, nickname으로 SignupResponse 반환
     //    hint: return new SignupResponse(savedUser.getId(), savedUser.getEmail(), savedUser.getNickname())
     return new SignupResponse(savedUser.getId(), savedUser.getEmail(), savedUser.getNickname());
   }
